@@ -1,0 +1,49 @@
+---
+status: draft
+generated_by: fe-prd-plan
+design: <figma | none>
+---
+
+# [交互] <需求简称>
+
+> **本文不是切图清单。** 切图与落码由实现阶段 Skill 负责；本文供还原 UI / 写交互时对照。
+
+## 0. 设计索引（无稿可删此节）
+
+| 项 | 值 |
+|----|-----|
+| Figma URL | <url> |
+| scopeNodeId | <a:b> |
+| 摘录 | `figma-excerpt.md` |
+
+## 1. Surface 列表
+
+| Surface | 说明 | Figma 分区 nodeId（若有） |
+|---------|------|---------------------------|
+| 主界面 | ... | ... |
+| <弹窗名> | ... | ... |
+
+## 2. 分 Surface 交互规范
+
+### 2.1 <主界面>
+*   **结构**：<分区说明>
+*   **状态处理**：Normal / Loading / Empty / Error / Disabled（缺则写「未提供」）
+*   **交互流**：<点击 A → Loading → 成功 Toast / 失败面板>
+*   **来源**：Figma / PRD
+
+### 2.2 <弹窗或子页>
+...
+
+## 3. TEXT / 文案策略
+
+| 文案 | 归类（whole-btn-text / jsx-fixed / dynamic / 未知） | 说明 |
+|------|-----------------------------------------------------|------|
+| ... | ... | ... |
+
+## 4. 全局反馈
+*   **反馈方式**：Toast / Modal / ...
+*   **兜底**：网络错误等
+
+## 5. 与 requirements / plan
+*   业务规则以 `requirements.md` 为准
+*   验收任务见 `plan.md` 中 type=`ui-verify` 项

@@ -1,0 +1,17 @@
+# 可选 meta.yaml 示例（写入 outputDir/meta.yaml）
+
+```yaml
+generated_by: fe-prd-plan
+status: draft   # draft | confirmed
+mode: prd+figma # prd-only | prd+figma | figma-only
+output_dir: docs/prd/example/
+source_urls:
+  - https://example.com/doc
+figma:
+  - url: https://www.figma.com/design/xxx/yyy?node-id=1-2
+    scope_node_id: "1:2"
+created_at: "2026-07-28T00:00:00+08:00"
+confirmed_at: null
+```
+
+正式文件不要包含本说明标题；只写 YAML 正文。

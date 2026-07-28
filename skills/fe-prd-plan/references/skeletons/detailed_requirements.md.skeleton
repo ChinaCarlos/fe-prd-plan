@@ -1,25 +1,7 @@
-# [详细需求] <需求简称>
+# 兼容说明
 
-## 1. 业务概述
-<简述业务背景、目标用户及核心价值>
+自 **0.2.0** 起，业务定稿文件名为 **`requirements.md`**，骨架见 [`requirements.md.skeleton`](requirements.md.skeleton)。
 
-## 2. 核心功能需求
+若用户或旧流程仍要求 `detailed_requirements.md`：按 `requirements.md.skeleton` 生成后**复制或另存**为 `detailed_requirements.md`，或只生成一份 `requirements.md` 并在对话中说明更名。
 
-### 2.1 <功能模块 A>
-*   **业务逻辑**：<详细描述逻辑流，包含前置条件、核心路径、异常逻辑>
-*   **关键校验项**：<列出所有需要校验的规则，如格式、权限、身份冲突等>
-*   **数据说明**：<涉及到的核心字段、枚举值定义>
-
-### 2.2 <功能模块 B>
-...
-
-## 3. UI 交互文档
-
-### 3.1 <页面/组件 A> 交互规范
-*   **视觉规范引用**：<关联设计稿或原型图关键位置>
-*   **状态处理**：<描述不同状态（Normal, Hover, Loading, Empty, Error）的视觉与行为差异>
-*   **交互流**：<详细描述用户操作后的反馈逻辑，如：点击 A -> 进入 Loading -> 成功则弹出 Toast -> 失败则展示 Error 面板>
-
-### 3.2 全局异常流与反馈
-*   **反馈方式**：<统一规定 Toast, Modal, Message 等反馈形式的应用场景>
-*   **兜底策略**：<如网络断开、服务端报错时的统一处理方案>
+交互细规格请用 [`interaction.md.skeleton`](interaction.md.skeleton)，不要把全部 UI 细节只堆在本旧文件名里。

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "spark-figma-mcp": {
+      "command": "npx",
+      "args": ["-y", "spark-figma-mcp"]
+    }
+  }
+}

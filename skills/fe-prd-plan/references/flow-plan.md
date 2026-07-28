@@ -1,47 +1,49 @@
-# 第二步：详细拆解 + 生成交付物
+# 任务拆分与 plan.md
 
-输入 = `flow-fetch.md` 归档的 md（或用户直接粘贴的需求文本）。本流程不做完整度评估、不做需求分级、不建 hub/registry/meta.yaml/change 目录——只做「详细拆解 → 生成交付物 → 对话确认」这一段最短路径。
+输入 = 门②通过后的需求原文（及可选的已确认 Figma 摘录）。  
+完整度评估 / 需求分级 / hub 目录：**不做**。
 
-## ① 详细需求下钻
+可在门②后先出 **draft** `plan.md`；若存在 Figma，建议在门③后根据控件/分区微调 task，再与 `flow-merge.md` 一并定稿。
 
-针对前端开发，需从原始文档中提取并细化：
-- **业务逻辑**：核心流程、权限校验、身份互斥规则。
-- **UI 交互**：状态处理（Loading/Error/Empty）、异常流引导、动效反馈规范。
+## ① 详细需求下钻（为 plan 与 requirements 做准备）
+
+从原文提取：
+
+- **业务逻辑**：核心流程、权限、身份互斥
+- **UI 交互**：Loading / Error / Empty、异常引导、动效（有 Figma 时以摘录补全，冲突进 open-questions）
 
 ## ② task 拆分
 
-每个 task = **最小可独立验证单元**：能单独判定完成，不与其它 task 耦合到无法单独验收。粒度以「可独立验证」为唯一标准，不是文件数或工时估算。
+每个 task = **最小可独立验证单元**。粒度标准是可独立验收，不是文件数或工时。
 
-## ③ 分型判定（写死规则，不当场感觉）
+## ③ 分型判定（写死）
 
 | 判定条件 | type |
-|---|---|
+|----------|------|
 | 业务逻辑 / 数据处理 / 接口 / 状态管理 | `tdd` |
 | 纯布局 / 动效 / 平台 UI 适配 | `ui-verify` |
 | 纯文档 / 流程文本（无可测运行时行为） | `docs` |
 | 无测试基建、仅能验证构建产物 | `build-verify` |
 
-**可测逻辑混进 `ui-verify` task = 拆分失败**，必须拆出独立 `tdd` task。
+**可测逻辑混进 `ui-verify` = 拆分失败**，必须拆出独立 `tdd` task。
 
-## ④ 生成交付物
+## ④ 生成 `plan.md`
 
-- **plan.md**：按 `skeletons/plan.md.skeleton` 生成，侧重开发清单。
-- **detailed_requirements.md**：按 `skeletons/detailed_requirements.md.skeleton` 生成，侧重业务逻辑与交互细节。
+按 [`skeletons/plan.md.skeleton`](skeletons/plan.md.skeleton) 写入 **`outputDir/plan.md`**。
 
-落盘位置：
-- 有归档来源：`docs/prd/<归档目录名>/`
-- 无归档来源：当前工作目录或用户指定目录。
+`requirements.md` / `interaction.md` **不在本文件单独定稿**——走 `flow-merge.md`（无 Figma 时 merge 仍负责从 PRD 生成两份文档）。
 
 ## ⑤ 自审
 
-- placeholder 扫描：骨架占位符（`<...>`）是否已全部替换
-- 需求覆盖度：确保所有逻辑校验与交互点均已在 `detailed_requirements.md` 中体现。
-- 分型一致性：同一份 plan 内不应出现"同类逻辑一半标 tdd 一半标 ui-verify"的不一致
+- 无残留 `<...>` 占位
+- 分型一致
+- 任务总览表将在对话中完整渲染（见下）
 
-## ⑥ 对话渲染纪律（强制）
+## ⑥ 对话渲染
 
-任务总览表必须**完整渲染进对话**。`detailed_requirements.md` 的核心章节（尤其是业务校验逻辑与交互规范）也需简要展示。
+任务总览表必须完整进对话。业务/交互细节的完整渲染放在 merge 后的门④。
 
-## ⑦ 确认即完成
+## ⑦ 与门禁关系
 
-等待用户「确认」后，本 Skill 完成职责。
+- 本阶段不单独设「plan 专用门」；plan 与 requirements / interaction 在**门④**一并确认。
+- 用户若只要 plan、明确跳过详细 requirements：可在门①声明，仍建议最少产出 `plan.md` + 精简 `requirements.md`。

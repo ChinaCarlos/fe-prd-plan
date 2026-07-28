@@ -1,54 +1,111 @@
 ---
 name: fe-prd-plan
-description: Use when the user gives a requirement-document link that needs login (Confluence, DingTalk doc, Feishu doc, or similar internal doc systems), or pastes requirement text directly, and wants it fetched and turned into a task-based implementation plan and detailed frontend requirements (拉取需求文档、拆任务、出实现计划、出详细前端需求文档). Fetching relies on the user's own already-logged-in local Chrome/Edge via CDP — no platform-specific API/OAuth app is required, so it generalizes across any doc system the user can already see in their browser. Output is lightweight: a task list with type classification (tdd/ui-verify/build-verify/docs) and a detailed PRD/UI document.
+description: >-
+  Use when the user gives a requirement-document link that needs login (Confluence, DingTalk doc, Feishu doc, or similar),
+  pastes requirement text, and/or provides Figma design URL(s), and wants a task plan plus frontend requirements /
+  interaction docs (拉取需求、拆任务、出 plan、出 requirements/interaction；可选 Figma 识交互后合成).
+  Fetching uses the user's already-logged-in local Chrome/Edge via CDP. Optional Figma analysis uses spark-figma-mcp
+  (read-only: get_node / get_screenshot / get_design_context — never save_screenshots or write app code).
 ---
 
-# fe-prd-plan：通用需求文档拉取 + 详细需求拆解
+# fe-prd-plan：需求文档拉取 + 计划拆分 +（可选）Figma 交互合成
 
-本 Skill 通过操控用户本机**已登录**的 Chrome/Edge（CDP 协议）读取需求文档正文，不依赖任何平台专用 REST API/企业应用凭证——只要你在浏览器里能看到这份文档，本 Skill 原则上就能读到。拉取到文档后，进一步拆解为任务级实现计划（分型 `tdd`/`ui-verify`/`build-verify`/`docs`）并生成面向前端开发的详细需求与 UI 交互文档，产出 `plan.md` 与 `detailed_requirements.md`。
+本 Skill 通过本机**已登录**的 Chrome/Edge（CDP）读取需求文档；可选地用 **spark-figma-mcp** 只读分析用户给出的 Figma `scopeNodeId` 子树，将 PRD 与设计识别结果合成为可给后续实现参考的文档。**不写业务代码、不切图落盘、不派发实现。**
 
-CDP 抓取内核改编自开源项目 **web-access**（作者：一泽Eze，MIT License，<https://github.com/eze-is/web-access>），详见仓库根 `LICENSE` 的 Third-party notice。
+CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com/eze-is/web-access>），见仓库根 `LICENSE` Third-party notice。
 
 ## 沟通语言（强制 · 简体中文）
 
-过程说明、追问清单、任务总览表、确认请求等对用户可见的内容必须使用简体中文；代码、路径、命令、变量名可保留英文。
+对用户可见的过程说明、门禁确认、任务总览、缺口表必须使用简体中文；代码、路径、命令、`nodeId` / `fileKey` 可保留英文。
 
 ## 触发条件
 
-- 用户输入 `/prd-plan`
-- 用户给了一个需要登录才能查看的需求文档链接（Confluence、钉钉文档、飞书文档等），要求拉取或据此出计划
-- 用户直接粘贴需求文本，明确要求「拆任务」「出实现计划」「按这个需求排期」
+- `/prd-plan`
+- 需要登录才能查看的需求文档链接，要求拉取或出计划
+- 粘贴需求文本并要求「拆任务 / 出实现计划 / 出详细需求」
+- 同时或单独提供 Figma 设计链接，要求「按稿补交互规格 / 合成 interaction 文档」
 
-## 两步流程
+## 必读流程（按顺序 Read）
 
-1. **文档拉取**（仅当输入是链接时；用户已粘贴文本则跳过）：完整步骤见 [`references/flow-fetch.md`](references/flow-fetch.md)——前置环境检查、CDP 抓取、归档落盘、Secret Scan、站点经验沉淀。
-2. **详细拆解 + 生成交付物**：完整步骤见 [`references/flow-plan.md`](references/flow-plan.md)——task 拆分、分型判定、生成 `plan.md` 与 `detailed_requirements.md` 骨架、对话渲染确认。
+| 文档 | 用途 |
+|------|------|
+| [`references/flow-overview.md`](references/flow-overview.md) | 阶段总览与模式 |
+| [`references/flow-gates.md`](references/flow-gates.md) | 人工确认门 ①～④ |
+| [`references/flow-locate.md`](references/flow-locate.md) | 定 `outputDir` / 输入源 / Figma scopes |
+| [`references/flow-fetch.md`](references/flow-fetch.md) | CDP 拉取与归档 |
+| [`references/flow-figma-interact.md`](references/flow-figma-interact.md) | Figma 只读识别（有链接才走） |
+| [`references/flow-plan.md`](references/flow-plan.md) | 任务拆分与 plan |
+| [`references/flow-merge.md`](references/flow-merge.md) | PRD × Figma 合成规则 |
 
-两步任一步骤完成后都不自动进入下一步的"隐性推进"——文档拉取完成后需向用户确认已拉到正确内容，再进入拆分；交付物经用户确认后本 Skill 即完成职责。
+## 模式
 
-## 交付物定义
+| 模式 | 条件 |
+|------|------|
+| `prd-only` | 仅有需求链接或粘贴文本 |
+| `prd+figma` | 需求 + 至少一个 Figma URL |
+| `figma-only` | 仅有 Figma（少见；`requirements.md` 以稿面推断并标「缺 PRD」） |
 
-- **plan.md**：任务级清单，侧重于“怎么做”和“验证准则”。
-- **detailed_requirements.md**：业务逻辑与 UI 交互细节，侧重于“做什么”和“交互规范”。
+## 交付物（均在确认后的 `outputDir` 下）
+
+| 文件 | 说明 |
+|------|------|
+| `source/` | 归档原文与 `assets/`（有拉取时） |
+| `plan.md` | 任务清单（tdd / ui-verify / build-verify / docs） |
+| `requirements.md` | **定稿**：业务需求（做什么、校验、数据） |
+| `interaction.md` | **定稿**：交互/UI 规格（有 Figma 时必出；无 Figma 时可由 PRD  alone 生成精简版） |
+| `figma-excerpt.md` | 中间产物：设计识别摘录（有 Figma 时） |
+| `open-questions.md` | 未关闭问题；全部关闭前不得标 `status: confirmed` |
+| `meta.yaml` | 可选：来源 URL、`scopeNodeId`、模式、生成时间 |
+
+骨架见 `references/skeletons/`。
+
+### 默认 `outputDir`
+
+- 未指定：`docs/prd/<归档目录名>/`（归档名须门禁 ① 确认）
+- 用户指定活动/页面目录时：落在该目录下的 `prd/`（例如 `packages/<pkg>/src/pages/<activity>/prd/`），**禁止**写死单一业务仓库路径
+
+## 人工门禁（强制）
+
+完整定义见 [`flow-gates.md`](references/flow-gates.md)。任一门未通过不得进入下一阶段；**禁止**隐性连跑。
+
+| 门 | 时机 |
+|----|------|
+| ① | 定范围 / `outputDir` / 输入 / Figma scopes 之后 |
+| ② | CDP 拉文（或确认粘贴文本）之后 |
+| ③ | Figma 摘录之后（无 Figma 则跳过） |
+| ④ | 合成定稿之前（冲突与缺口关闭） |
+
+## MCP（spark-figma-mcp）
+
+- 插件根 [`.mcp.json`](../../.mcp.json) 声明了 `spark-figma-mcp`（`npx -y spark-figma-mcp`），供未配置过的环境安装后可用。
+- **若本机 `~/.cursor/mcp.json` 或项目已配置同名服务**：优先使用**已连接、可用**的那套；不要重复启动两套互相踩脚。命名空间可能是 `spark-figma-mcp` 或 `user-spark-figma-mcp`，以当前会话 `GetDynamicTools` / MCP 列表为准。
+- 使用前须：Figma **桌面端**打开目标文件，并 Run **Spark-Figma-Plugin**；`list_files` 为空则暂停并提示用户。
+- **只读工具**：`list_files` → `get_screenshot` / `get_node` / 可选 `get_design_context`。
+- **禁止**：`save_screenshots`、向业务 `images/` 切图、改页面/reducer/路由源码。
 
 ## 明确不做的事
 
-- 不做 PRD 完整度评估、追问清单、需求分级
-- 不建 `hub`、`releases/registry.md`、`context-sources.yaml`、`meta.yaml`、`changes/<change-id>/` 目录
-- 不做多端职责分配（`platform-ownership.md`）
-- 不做 G-plan 状态机式门禁、`dev_mode`（subagent/inline）拍定；用户在对话中确认计划即视为通过
-- 不写代码、不派发实现——仅产出「拉取归档」与「交付物」
-- 不为了"能抓所有平台"而去申请各平台的企业应用/开放平台凭证——CDP 方案的价值就是不需要这些
+- 不做 PRD 完整度打分、需求分级、G-plan 重型状态机
+- 不建 `hub` / `releases/registry.md` / `context-sources.yaml` / `changes/<id>/` 等重型目录（`outputDir` 下轻量 `meta.yaml` 除外）
+- 不做多端职责分配文档
+- **不写业务代码、不派发实现、不切图**
+- 不为各文档平台申请企业 API；CDP 方案不需要这些
+- 无用户明文多个 `node-id` / 多个 Figma 链接时，**禁止**扩扫其它 Frame / 全文件盘点 tab
 
-## 风险与边界须知
+## 风险与边界
 
-- 浏览器自动化存在被目标站点判定为异常行为、进而限制/封禁账号的风险；已内置基础防护（拦截页面对本地调试端口的探测）但无法完全避免，继续使用即视为知晓并接受。
-- 仅操作 Agent 自己创建的后台 tab，不动用户已打开的 tab；任务结束主动关闭自建的 tab。
-- 需要登录态的内容，若当前未登录，向用户说明后等待其在自己浏览器登录，不代为输入账号密码。
-- 抓取内容不进本 Skill 自身目录，落到用户当前工作项目内。Agent 在落盘前必须向用户确认归档目录名（默认 `docs/prd/<名称>/`），用户亦可提供完整自定义路径。
+- 浏览器自动化有账号限制风险；继续即视为接受（拉文前须展示须知，见 `flow-fetch.md`）。
+- 仅操作 Agent 自建后台 tab；结束关闭自建 tab。
+- 未登录时等待用户自行登录，不代填账号密码。
+- 抓取与定稿一律落到**当前工作项目**的 `outputDir`，不进本 Skill 安装目录。
 
 ## 环境要求
 
-- Node.js 22+（`check-deps.mjs` 会做版本检查，不满足会 warn 但仍尝试继续）
-- 本机已安装 Chrome 或 Edge，且已在其中登录目标文档系统
-- 无需 npm 依赖安装——`scripts/*.mjs` 全部基于 Node 原生 API
+- Node.js 22+（`check-deps.mjs` 会检查；低于 22 会 warn 仍可尝试）
+- 本机 Chrome 或 Edge，且已登录目标文档系统（拉链接时）
+- 有 Figma 支路时：桌面 Figma + Spark-Figma-Plugin + 可用的 spark-figma-mcp
+- `scripts/*.mjs` 无额外 npm 依赖
+
+## 完成后交接
+
+定稿确认后明确告知用户文档路径，并说明：**本 Skill 不写代码**；后续实现请在对应项目用实现类 Skill（如活动页 `fe-activity-agent`）并指定「按 `requirements.md` / `interaction.md` 还原」。
