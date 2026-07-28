@@ -40,7 +40,7 @@ fi
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-info "下载最新版本（分支 $BRANCH）..."
+info "下载最新版本（分支 ${BRANCH}）..."
 if ! git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMP_DIR/repo" >/dev/null 2>&1; then
   error "clone 失败，请检查网络或仓库地址：$REPO_URL"
 fi

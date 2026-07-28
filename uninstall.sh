@@ -22,7 +22,7 @@ fi
 
 if [ "$AUTO_YES" -ne 1 ]; then
   if [ -t 0 ]; then
-    read -r -p "[fe-prd-plan] 即将删除 $INSTALL_DIR，确认？(y/N) " ans
+    read -r -p "[fe-prd-plan] 即将删除 ${INSTALL_DIR}，确认？(y/N) " ans
     case "$ans" in
       y|Y) ;;
       *) echo "[fe-prd-plan] 已取消。"; exit 0 ;;
