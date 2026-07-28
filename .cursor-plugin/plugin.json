@@ -1,0 +1,20 @@
+{
+  "name": "fe-prd-plan",
+  "displayName": "FE PRD Plan",
+  "version": "0.1.0",
+  "description": "通用需求文档拉取（基于本机已登录 Chrome/Edge 的浏览器 CDP，支持 Confluence / 钉钉文档 / 飞书文档等任意登录态站点）+ 拆任务生成实现计划",
+  "author": {
+    "name": "ChinaCarlos"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/ChinaCarlos/fe-prd-plan",
+  "repository": "https://github.com/ChinaCarlos/fe-prd-plan",
+  "keywords": [
+    "prd",
+    "plan",
+    "cdp",
+    "requirements",
+    "task-breakdown"
+  ],
+  "skills": "./skills/"
+}

@@ -1,0 +1,10 @@
+.DS_Store
+node_modules
+
+# 运行时生成/积累的本机文件，不入库
+skills/fe-prd-plan/scripts/config.env
+skills/fe-prd-plan/references/site-patterns/*.md
+!skills/fe-prd-plan/references/site-patterns/.gitkeep
+
+# 安装标记（本机记录，不共享）
+.risk_notice_shown
