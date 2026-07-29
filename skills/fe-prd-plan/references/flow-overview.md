@@ -3,12 +3,14 @@
 进入本 Skill 后按下列阶段执行；细节见各 `flow-*.md`。任一门禁未通过不得跳阶段。
 
 ```text
-① flow-locate（定范围）──确认门①──►
+① flow-locate（定范围）──确认门①（调用方已锁定路径时走轻量门①）──►
 ② flow-fetch（有链接）或确认粘贴文本──确认门②──►
-③ flow-figma-interact（有 Figma）──确认门③──►
+③ flow-figma-interact（有 Figma；截图落 source/assets/）──确认门③──►
 ④ flow-plan（拆任务，可与③并行草稿，但定稿在合并后）──►
-⑤ flow-merge（合成 requirements + interaction）──确认门④──► 完成
+⑤ flow-merge（合成 requirements + interaction）──确认门④──► 交还调用方或结束
 ```
+
+截图与附件统一：`{outputDir}/source/assets/`（见 `flow-merge.md`「资源路径」）。
 
 ## 阶段要点
 
