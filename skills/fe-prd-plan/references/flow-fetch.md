@@ -59,16 +59,19 @@ node "<本 skill 目录>/scripts/check-deps.mjs"
 
 根因：这类编辑器的 `document`/`body` 本身固定为视口高度，真正的正文滚动发生在内部某个 `div` 容器里，因此常规 `fullPage` 截图（依赖 `Page.getLayoutMetrics` 读 document 布局高度）和 `/scroll`（只滚 `window`）都会失效——**不是截图逻辑错了，是它读到的"页面高度"本身就是假的**。
 
-处理步骤：
+处理步骤（**只滚一趟**：文字和截图在同一次滚动里一起拿，不要分两个循环重复滚同一份文档）：
 
-1. `GET /find-scroll-container?target=ID`（可选传 `selector` 显式指定）：自动探测真正可滚动的正文容器，并给它打临时属性 `data-cdp-scroll-target="1"`。
+1.（可选）`GET /find-scroll-container?target=ID` 先探测确认一下真正可滚动的正文容器；不传也没关系，`/capture-scroll` 内部会自动做同样的探测。
    - 返回 `found:false` → 说明该页面其实是 document 级滚动，回退普通分支。
-   - **不要**把某次探测到的 class 名（如 styled-components 生成的哈希 class）硬编码进站点经验或代码里，每次构建都可能变化；只信任这个探测结果 + 打标记的方式。
-2. **正文文字**：对 `[data-cdp-scroll-target="1"]` 循环 `POST /eval` 设置 `scrollTop` 并读取该容器的 `innerText`，每步累加/去重后拼成完整正文（比截图更省 token、更利于后续编辑，**不要**指望用截图 OCR 替代文字提取）。
-3. **长图**：`POST /capture-scroll?target=ID`，body `{"outDir": "<outputDir>/source/assets/_capture_tmp"}`（不传 `selector` 时自动复用第 1 步探测逻辑），产出 `manifest.json` + 分段截图切片。
-4. 拼接：`python3 <本 skill 目录>/scripts/stitch-long-page.py <outDir>/manifest.json <outputDir>/source/assets/prd_full_page.png`。
+   - **不要**把某次探测到的 class 名（如 styled-components 生成的哈希 class）硬编码进站点经验或代码里，每次构建都可能变化；只信任临场探测 + 打标记的方式。
+2. **一次调用拿全**：`POST /capture-scroll?target=ID`，body `{"outDir": "<outputDir>/source/assets/_capture_tmp"}`。它会自动定位容器后逐屏滚动，**每停一步同时**截图 + 读该容器当前渲染出的 `innerText`，返回 `manifest.json`：
+   - `shots[].text`：每屏读到的文字
+   - `mergedText`：对 `shots[].text` 做重叠去重后拼接的完整正文（虚拟滚动相邻两屏渲染常有缓冲区重叠，接口已处理，不需要再手动去重），同时落盘 `outDir/merged_text.txt`
+   - 直接用 `mergedText` 作为归档正文的素材，整理成 Markdown 时**不能**再精简内容（见 ③c）。
+3. **长图**：`python3 <本 skill 目录>/scripts/stitch-long-page.py <outDir>/manifest.json <outputDir>/source/assets/prd_full_page.png`（用的是第 2 步已经产出的同一份 `manifest.json`，不需要再滚一遍）。
    - 依赖 Pillow；`check-deps.mjs` 会预检，缺失时先 `pip3 install --quiet Pillow`。
-5. 拼好后**删除**中间目录（`_capture_tmp` 下的切片与 `manifest.json`），只保留最终的 `prd_full_page.png`，不落库中间产物。
+   - 这一步只是为了产出一张人工核对/存证用的长图，**不是**为了拿文字——文字已经在第 2 步的 `mergedText` 里了。
+4. 拼好后**删除**中间目录（`_capture_tmp` 下的切片、`manifest.json`、`merged_text.txt`），只保留最终的 `prd_full_page.png`，不落库中间产物。
 
 ### ③b 内嵌附件与外部链接边界（强制 · 禁止递归抓取）
 
@@ -83,7 +86,16 @@ node "<本 skill 目录>/scripts/check-deps.mjs"
 
 若不确定某个链接是否需要打开，**先按不打开处理**，在 `open-questions.md` / 门②里列出该链接让用户决定，而不是默认展开。
 
-## ④ 归档落盘
+### ③c 归档完整性（强制 · 禁止因「超出范围」摘要/略写）
+
+**根因场景**：③/③a 已经完整采集到某节正文（比如判断为「本次不实现」的相邻功能），但写入 `source/*.md` 时因为觉得"反正超出范围/用不上"就写成「略」「详见截图」「摘录存档」等占位语，导致归档比实际文档缩水一大截——这不是采集能力问题，是**归档时手滑丢内容**，必须杜绝。
+
+规则：
+
+- `outputDir/source/<归档文件名>.md` 必须是对该文档正文的**完整转录**：允许整理成 Markdown 格式（标题层级、表格化、去掉「点赞/评论/文档关系图」等页面噪音页脚），**不允许**因为判断某节「超出本次范围」「暂不实现」而省略、摘要或用「略/详见截图」代替其正文内容。
+- **范围裁剪只体现在下游文档**：某功能是否在本次实现范围内，应在 `requirements.md` 的「本次范围」章节里说明（如"3.2 节功能超出本次范围，仅记录不实现"），**不能**反过来影响 `source/` 归档的完整度——source 是「这篇文档原本写了什么」的忠实记录，requirements 才是「这次要做什么」的裁剪结果，两者不能混为一谈。
+- 篇幅确实很大时，可将某节拆到 `source/<归档文件名>-appendix-<slug>.md` 并在主文件对应位置用相对链接引用，但**不能丢内容**，只是换个文件放。
+- **归档后自检**：不少文档编辑器（如钉钉）会在页面角落显示全文字数（如「1707 个字」），可作为完整性的粗校验——归档 markdown 的正文字数明显少于该计数，视为归档不完整，需回头把被略写的段落补全，再进门②。若站点没有这类计数器，至少按章节标题逐条核对「原文有的小节，归档文件里都要有实质内容，而不是占位语」。
 
 - 根目录 = 门①确认的 **`outputDir`**
 - 正文 → `outputDir/source/<归档文件名>.md`

@@ -100,7 +100,10 @@ curl -s "http://localhost:3456/find-scroll-container?target=ID"
 返回 `{found:false}` 说明该页面其实是 document 级滚动，直接用 `/scroll` + `/screenshot?fullPage=true` 即可。
 
 ### POST /capture-scroll?target=ID
-对（自动探测或指定的）滚动容器按其可视高度为步长逐屏截图，直至滚到底，产出 `outDir/slice_N.png` + `outDir/manifest.json`（含容器几何信息 `geo` 与每张切片对应的 `scrollTop`）。**只截图，不提取文字**——正文文字仍需用 `/eval` 对同一容器分段读 `innerText`。
+对（自动探测或指定的）滚动容器按其可视高度为步长**单趟滚动**，每停一步就**同时**读该容器当前渲染出的 `innerText` 并截图，直至滚到底——不分「读文字」「截图」两趟滚，避免同一份文档被滚两遍。产出 `outDir/slice_N.png` + `outDir/manifest.json`：
+- `geo`：容器几何信息
+- `shots`：`[{scrollTop, file, text}]`，每张切片对应的滚动位置、截图文件、该步读到的文字
+- `mergedText`：对 `shots[].text` 做「最长后缀=前缀重叠去重」后拼接的完整正文（虚拟滚动容器相邻两屏渲染常有缓冲区重叠，已在这一步去重，不需要再手动去重一遍）；同时落盘到 `outDir/merged_text.txt`，可直接读取用作归档正文的基础素材（仍需按 Markdown 排版整理，但内容应完整覆盖，不能再精简）
 ```bash
 curl -s -X POST "http://localhost:3456/capture-scroll?target=ID" \
   -H 'Content-Type: application/json' \
@@ -108,7 +111,7 @@ curl -s -X POST "http://localhost:3456/capture-scroll?target=ID" \
 ```
 Body 字段：`outDir`（必填，绝对路径）、`selector`（可选，跳过自动探测）、`step`（可选，滚动步长 px，默认用容器 `clientHeight`）、`maxSteps`（可选，默认 30，硬上限 60）、`settleMs`（可选，每步截图前的等待毫秒，默认 500，给虚拟滚动的懒渲染留时间）。
 
-拿到 `manifest.json` 后用 Pillow 拼成一张完整长图：
+拿到 `manifest.json` 后用 Pillow 拼成一张完整长图（`mergedText` 已经够用时，这一步只用于产出人工核对/存证用的长图，不是为了拿文字）：
 ```bash
 python3 "<本 skill 目录>/scripts/stitch-long-page.py" outDir/manifest.json outputDir/source/assets/prd_full_page.png
 ```

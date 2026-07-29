@@ -314,6 +314,25 @@ async function readBody(req) {
   return body;
 }
 
+// --- 合并有重叠的文本片段（虚拟滚动容器分段截取时，相邻片段常有重叠的渲染缓冲区）---
+// 用「找最长后缀=前缀重叠」的方式去重拼接，避免虚拟滚动分段读取到的正文重复。
+// 限制单次比较长度，避免长文档下 O(n^2) 比较拖慢响应。
+function mergeOverlappingText(chunks) {
+  const MAX_OVERLAP_CHECK = 4000;
+  let merged = '';
+  for (const chunk of chunks) {
+    if (!chunk) continue;
+    if (!merged) { merged = chunk; continue; }
+    const maxOverlap = Math.min(merged.length, chunk.length, MAX_OVERLAP_CHECK);
+    let overlapLen = 0;
+    for (let len = maxOverlap; len > 0; len--) {
+      if (merged.slice(-len) === chunk.slice(0, len)) { overlapLen = len; break; }
+    }
+    merged += chunk.slice(overlapLen);
+  }
+  return merged;
+}
+
 // --- HTTP API ---
 const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, `http://localhost:${PORT}`);
@@ -660,10 +679,9 @@ const server = http.createServer(async (req, res) => {
     // 应对虚拟滚动/窗口化渲染文档：无法一次性截长图（fullPage 截图依赖 document 布局尺寸，
     // 这类页面 document 高度恒等于视口高度，量不出真实内容高度）。
     // 做法：定位真实滚动容器（不传 selector 则自动探测，见 /find-scroll-container），
-    // 按容器可视高度为步长逐屏截图，直到滚到底；产出 outDir/slice_N.png + manifest.json。
-    // manifest 再交给 stitch-long-page.py（Pillow）拼成一张完整长图，供人工核对/存证。
-    // 注意：本接口只负责“截图切片”，抓正文文字仍应另用 /eval 对同一容器分段读 innerText
-    //（原因见 references/flow-fetch.md「虚拟滚动/长页面识别」），不要指望截图 OCR 替代文字提取。
+    // 按容器可视高度为步长**一次滚动**同时拿"这一屏的文字 + 这一屏的截图"（不分两趟滚，
+    // 避免对同一文档滚两遍）；产出 outDir/slice_N.png + manifest.json（含每屏 text 与去重
+    // 合并后的 mergedText）。manifest 再交给 stitch-long-page.py（Pillow）拼成一张完整长图。
     else if (pathname === '/capture-scroll') {
       const sid = await ensureSession(q.target);
       let body;
@@ -708,45 +726,57 @@ const server = http.createServer(async (req, res) => {
       const clientH = step || geo.height;
       let scrollTop = 0;
       const shots = [];
-      for (let i = 0; i < maxSteps; i++) {
+
+      // 单步：滚到 top → 读该容器当前渲染出的 innerText → 截图。三件事一次 CDP 往返序列做完，
+      // 不再为了拿文字而单独把文档从头到尾再滚一遍。
+      const captureStep = async (top) => {
         const scrollJs = `(function(){
           var el = document.querySelector(${JSON.stringify(targetSelector)});
-          el.scrollTop = ${scrollTop};
+          el.scrollTop = ${top};
           el.dispatchEvent(new Event('scroll', {bubbles:true}));
           return JSON.stringify({scrollTop: el.scrollTop, scrollHeight: el.scrollHeight});
         })()`;
         const stateResp = await sendCDP('Runtime.evaluate', { expression: scrollJs, returnByValue: true }, sid);
         let state;
-        try { state = JSON.parse(stateResp.result?.result?.value); } catch { break; }
+        try { state = JSON.parse(stateResp.result?.result?.value); } catch { return null; }
         await new Promise(r => setTimeout(r, settleMs));
+        // 滚动+等待渲染稳定后，同一时刻读文字 + 截图，避免文字和截图对应到不同的滚动状态
+        const textJs = `(function(){
+          var el = document.querySelector(${JSON.stringify(targetSelector)});
+          return el ? el.innerText : '';
+        })()`;
+        const textResp = await sendCDP('Runtime.evaluate', { expression: textJs, returnByValue: true }, sid);
+        const text = textResp.result?.result?.value || '';
         const shotResp = await sendCDP('Page.captureScreenshot', { format: 'png' }, sid);
+        return { scrollTop: state.scrollTop, scrollHeight: state.scrollHeight, text, shotData: shotResp.result.data };
+      };
+
+      for (let i = 0; i < maxSteps; i++) {
+        const result = await captureStep(scrollTop);
+        if (!result) break;
         const filePath = path.join(outDir, `slice_${i}.png`);
-        fs.writeFileSync(filePath, Buffer.from(shotResp.result.data, 'base64'));
-        shots.push({ scrollTop: state.scrollTop, file: filePath });
+        fs.writeFileSync(filePath, Buffer.from(result.shotData, 'base64'));
+        shots.push({ scrollTop: result.scrollTop, file: filePath, text: result.text });
 
         const nextTop = scrollTop + clientH;
-        if (nextTop >= state.scrollHeight) {
-          const finalTop = Math.max(state.scrollHeight - clientH, 0);
-          if (finalTop > state.scrollTop + 2) {
-            const finalJs = `(function(){
-              var el = document.querySelector(${JSON.stringify(targetSelector)});
-              el.scrollTop = ${finalTop};
-              el.dispatchEvent(new Event('scroll', {bubbles:true}));
-              return el.scrollTop;
-            })()`;
-            await sendCDP('Runtime.evaluate', { expression: finalJs, returnByValue: true }, sid);
-            await new Promise(r => setTimeout(r, settleMs));
-            const finalShot = await sendCDP('Page.captureScreenshot', { format: 'png' }, sid);
-            const finalFile = path.join(outDir, `slice_${i + 1}.png`);
-            fs.writeFileSync(finalFile, Buffer.from(finalShot.result.data, 'base64'));
-            shots.push({ scrollTop: finalTop, file: finalFile });
+        if (nextTop >= result.scrollHeight) {
+          const finalTop = Math.max(result.scrollHeight - clientH, 0);
+          if (finalTop > result.scrollTop + 2) {
+            const finalResult = await captureStep(finalTop);
+            if (finalResult) {
+              const finalFile = path.join(outDir, `slice_${i + 1}.png`);
+              fs.writeFileSync(finalFile, Buffer.from(finalResult.shotData, 'base64'));
+              shots.push({ scrollTop: finalResult.scrollTop, file: finalFile, text: finalResult.text });
+            }
           }
           break;
         }
         scrollTop = nextTop;
       }
 
-      const manifest = { geo, shots, selector: targetSelector };
+      const mergedText = mergeOverlappingText(shots.map(s => s.text));
+      fs.writeFileSync(path.join(outDir, 'merged_text.txt'), mergedText);
+      const manifest = { geo, shots, selector: targetSelector, mergedText };
       fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
       res.end(JSON.stringify(manifest));
     }
@@ -778,7 +808,7 @@ const server = http.createServer(async (req, res) => {
           '/scroll?target=&y=&direction=': 'GET - 滚动页面（仅 window/document 级）',
           '/screenshot?target=&file=': 'GET - 截图（fullPage 依赖 document 布局尺寸，虚拟滚动页面会截不全）',
           '/find-scroll-container?target=&selector=': 'GET - 探测/标记真正可滚动的正文容器（应对虚拟滚动编辑器）',
-          '/capture-scroll?target=': 'POST body={outDir,selector?,step?,maxSteps?,settleMs?} - 对内部滚动容器分段截图，产出可拼接长图的 manifest',
+          '/capture-scroll?target=': 'POST body={outDir,selector?,step?,maxSteps?,settleMs?} - 单趟滚动同时采集分段文字(mergedText)+截图，产出可拼接长图的 manifest',
         },
       }));
     }

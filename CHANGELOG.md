@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+- **`/capture-scroll` 改为单趟滚动**：之前"读正文文字"和"分段截图"是两个独立的滚动循环，等于同一份虚拟滚动文档滚两遍；现在每停一步同时读该容器 `innerText` 并截图，返回 `shots[].text` 与去重合并后的 `mergedText`（`outDir/merged_text.txt`），`flow-fetch.md`「③a」同步简化为一次调用
+- **归档完整性新规则（③c，强制）**：禁止因判断某节「超出本次范围」就在 `source/*.md` 里摘要/略写/用「详见截图」代替正文；范围裁剪只应体现在 `requirements.md`，不能影响 source 归档的完整度；门②新增「是否有章节被摘要/略写」检查项；钉钉站点经验补充用页面自带字数计数器做完整性粗校验
+
 ## 0.3.0
 - **虚拟滚动长页面支持**：新增 `cdp-proxy` 接口 `GET /find-scroll-container`（自动探测/标记页面真实可滚动的正文容器，不依赖易变的哈希 class 名）与 `POST /capture-scroll`（对该容器分段截图，产出可拼接的 `manifest.json`）
 - 新增 `scripts/stitch-long-page.py`（Pillow）将 `/capture-scroll` 产出的切片拼接为一张完整长图；`check-deps.mjs` 同步预检 `python3` + `Pillow`
