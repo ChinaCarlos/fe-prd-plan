@@ -33,6 +33,7 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 - 需要登录才能查看的需求文档链接，要求拉取或出计划（且**不属于**上表「须先 activity-agent」）
 - 粘贴需求文本并要求「拆任务 / 出实现计划 / 出详细需求」
 - 同时或单独提供 Figma 设计链接，要求「按稿补交互规格 / 合成 interaction 文档」
+- **直接粘贴/发送需求文档截图或设计截图（没有链接）**：同样视为有效输入源，走截图直读支路（见 `flow-fetch.md`「②a 截图输入」、`flow-figma-interact.md`「设计截图直读」），不强制要求用户先去找链接
 - 被 `fe-activity-agent` 等调用方 Read 后嵌入执行
 
 ## 必读流程（按顺序 Read）
@@ -51,9 +52,11 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 | 模式 | 条件 |
 |------|------|
-| `prd-only` | 仅有需求链接或粘贴文本 |
-| `prd+figma` | 需求 + 至少一个 Figma URL |
-| `figma-only` | 仅有 Figma（少见；`requirements.md` 以稿面推断并标「缺 PRD」） |
+| `prd-only` | 仅有需求输入（链接 / 粘贴文本 / 需求截图，三选一或组合） |
+| `prd+figma` | 需求输入 + 至少一个设计输入（Figma URL 或设计截图） |
+| `figma-only` | 仅有设计输入（Figma URL 或设计截图，少见；`requirements.md` 以稿面推断并标「缺 PRD」） |
+
+需求/设计输入不局限于链接：用户直接贴截图同样有效，只是**截图直读的还原精度低于链接/节点直读**（没有可解析的 DOM 文本或 Figma bounds 数据，靠视觉识别），产出文档须如实标注来源与置信度，不能包装成跟链接直读同等精度。
 
 ## 交付物（均在确认后的 `outputDir` 下）
 

@@ -12,7 +12,7 @@
 
 - 模式：`prd-only` / `prd+figma` / `figma-only`
 - `outputDir`（绝对或相对仓库根的路径）
-- 需求输入：链接 / 粘贴 / 本地已有 md
+- 需求输入：链接 / 粘贴 / 本地已有 md / 用户粘贴的需求截图（无链接时）
 - Figma：每个 URL 对应的 `scopeNodeId`（无则写「无」）
 - 归档目录名（若使用默认 `docs/prd/<名>/`）
 

@@ -7,8 +7,8 @@
 | 项 | 规则 |
 |----|------|
 | 模式 | 有需求无 Figma → `prd-only`；两者都有 → `prd+figma`；仅 Figma → `figma-only` |
-| 需求输入 | URL / 粘贴正文 / 工作区内已有 md 路径 |
-| Figma | 0～N 个 `figma.com/design/...` 或 `figma.com/file/...`；每个解析 `node-id=aaa-bbb` → `scopeNodeId=aaa:bbb` |
+| 需求输入 | URL / 粘贴正文 / 工作区内已有 md 路径 / **用户直接粘贴的需求文档截图**（无链接时，见 `flow-fetch.md`「②a 截图输入」） |
+| Figma | 0～N 个 `figma.com/design/...` 或 `figma.com/file/...`；每个解析 `node-id=aaa-bbb` → `scopeNodeId=aaa:bbb`；**或**用户直接粘贴的设计截图（无链接时的替代输入，见 `flow-figma-interact.md`「设计截图直读」，精度低于 Figma 节点数据） |
 | `outputDir` | 见「优先级」与下方默认值 |
 | 归档名 | 建议 `vX.Y.Z` 或 `YYYY-MM-DD-<需求简称>` |
 
@@ -61,9 +61,9 @@ Figma：<可选>
 - 模式：prd-only | prd+figma | figma-only
 - outputDir：`<path>`（来源：调用方指定 | 用户指定 | 默认 docs/prd）
 - 调用方：无 | fe-activity-agent | …
-- 需求来源：<url 或 粘贴或 本地路径>
+- 需求来源：<url / 粘贴文本 / 本地路径 / 用户粘贴的截图 N 张>
 - Figma scopes：
-  - `<url>` → `scopeNodeId: a:b`
+  - `<url>` → `scopeNodeId: a:b`（或：用户粘贴的设计截图 N 张，无链接）
 - 将生成：source/（若拉取）、plan.md、requirements.md、interaction.md、…
 - 本 Skill **不写代码、不切图**
 
