@@ -1,11 +1,12 @@
 ---
 name: fe-prd-plan
 description: >-
-  Use when the user gives a requirement-document link that needs login (Confluence, DingTalk doc, Feishu doc, or similar),
-  pastes requirement text, and/or provides Figma design URL(s), and wants a task plan plus frontend requirements /
-  interaction docs (拉取需求、拆任务、出 plan、出 requirements/interaction；可选 Figma 识交互后合成).
-  Fetching uses the user's already-logged-in local Chrome/Edge via CDP. Optional Figma analysis uses spark-figma-mcp
-  (read-only: get_node / get_screenshot / get_design_context — never save_screenshots or write app code).
+  Use when the user wants requirement docs fetched/planned in isolation (/prd-plan, or only PRD→plan with no activity-page implementation).
+  Fetch login-walled docs via CDP; optional Figma read-only via spark-figma-mcp; output plan/requirements/interaction.
+  IMPORTANT routing: If the workspace is an H5 activity monorepo (packages/partyActivity or packages/hh-active) AND the user
+  also wants to build/restore an activity page (新建活动、还原 UI、fe-activity-agent), do NOT run this skill as the top-level
+  entry — follow fe-activity-agent first; that skill will call this one with outputDir set.
+  (拉取需求、拆任务、出 plan/requirements/interaction；活动仓实现场景须由 fe-activity-agent 编排后再调本 Skill。)
 ---
 
 # fe-prd-plan：需求文档拉取 + 计划拆分 +（可选）Figma 交互合成
@@ -18,19 +19,28 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 对用户可见的过程说明、门禁确认、任务总览、缺口表必须使用简体中文；代码、路径、命令、`nodeId` / `fileKey` 可保留英文。
 
+## 路由优先级（防与实现 Skill 抢入口）
+
+| 场景 | 谁先跑 |
+|------|--------|
+| 用户只要文档/计划（`/prd-plan`、明确「先别写代码」） | **本 Skill** |
+| 工作区含 `packages/partyActivity` 或 `packages/hh-active`，且用户要**新建/改活动页、还原 UI、联调实现** | **先 `fe-activity-agent`**；由它定目录并调用本 Skill（带 `outputDir:`） |
+| 上下文已有 `调用方：fe-activity-agent` | 本 Skill 作子流程，**勿**再建议用户「改去跑 activity-agent」打断当前文档门禁 |
+
 ## 触发条件
 
 - `/prd-plan`
-- 需要登录才能查看的需求文档链接，要求拉取或出计划
+- 需要登录才能查看的需求文档链接，要求拉取或出计划（且**不属于**上表「须先 activity-agent」）
 - 粘贴需求文本并要求「拆任务 / 出实现计划 / 出详细需求」
 - 同时或单独提供 Figma 设计链接，要求「按稿补交互规格 / 合成 interaction 文档」
+- 被 `fe-activity-agent` 等调用方 Read 后嵌入执行
 
 ## 必读流程（按顺序 Read）
 
 | 文档 | 用途 |
 |------|------|
 | [`references/flow-overview.md`](references/flow-overview.md) | 阶段总览与模式 |
-| [`references/flow-gates.md`](references/flow-gates.md) | 人工确认门 ①～④ |
+| [`references/flow-gates.md`](references/flow-gates.md) | 人工确认门 ①～④（含调用方轻量门①） |
 | [`references/flow-locate.md`](references/flow-locate.md) | 定 `outputDir` / 输入源 / Figma scopes |
 | [`references/flow-fetch.md`](references/flow-fetch.md) | CDP 拉取与归档 |
 | [`references/flow-figma-interact.md`](references/flow-figma-interact.md) | Figma 只读识别（有链接才走） |
@@ -49,7 +59,7 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 | 文件 | 说明 |
 |------|------|
-| `source/` | 归档原文与 `assets/`（有拉取时） |
+| `source/` | 归档原文；**所有**截图/附件统一在 `source/assets/` |
 | `plan.md` | 任务清单（tdd / ui-verify / build-verify / docs） |
 | `requirements.md` | **定稿**：业务需求（做什么、校验、数据） |
 | `interaction.md` | **定稿**：交互/UI 规格（有 Figma 时必出；无 Figma 时可由 PRD  alone 生成精简版） |
@@ -59,6 +69,8 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 骨架见 `references/skeletons/`。
 
+**`status: confirmed` 判定**：仅当 `requirements.md` / `interaction.md`（及通常 `plan.md`）YAML frontmatter 为 `status: confirmed` 时视为定稿完成；`draft` **不算**已确认。
+
 ### 默认 `outputDir`
 
 - **调用方已传 `outputDir:`**（如 `fe-activity-agent`）：优先采用，见 [`flow-locate.md`](references/flow-locate.md)「优先级」与「调用方契约」
@@ -67,7 +79,7 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 ## 被其它 Skill 调用
 
-外部 Skill 无 IPC：须 **Read** 本 `SKILL.md` 与 `references/`，并在上下文写明 `outputDir` / 需求 / Figma。本 Skill 仍跑完自身门①～④；定稿后回报路径，**不**自动写业务代码。
+外部 Skill 无 IPC：须 **Read** 本 `SKILL.md` 与 `references/`，并在上下文写明 `outputDir` / 需求 / Figma。本 Skill 仍跑完自身门禁（调用方已锁定路径时门①可走**轻量复述**，见 `flow-gates.md`）；定稿后回报路径，**不**自动写业务代码、**不**重复开启第二套「实现阶段 0」——交还调用方。
 
 ## 人工门禁（强制）
 
@@ -75,7 +87,7 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 | 门 | 时机 |
 |----|------|
-| ① | 定范围 / `outputDir` / 输入 / Figma scopes 之后 |
+| ① | 定范围 / `outputDir` / 输入 / Figma scopes 之后（调用方已指定路径时可轻量） |
 | ② | CDP 拉文（或确认粘贴文本）之后 |
 | ③ | Figma 摘录之后（无 Figma 则跳过） |
 | ④ | 合成定稿之前（冲突与缺口关闭） |
@@ -113,4 +125,7 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 ## 完成后交接
 
-定稿确认后明确告知用户文档路径，并说明：**本 Skill 不写代码**；后续实现请在对应项目用实现类 Skill（如活动页 `fe-activity-agent`）并指定「按 `requirements.md` / `interaction.md` 还原」。
+定稿确认后明确告知用户文档路径（含 `status: confirmed`），并说明：**本 Skill 不写代码**。
+
+- 若由 **`fe-activity-agent` 调用**：交还调用方继续其「待确认执行计划 / 实现」；**不要**再要求用户另开一轮「请去跑 activity-agent」。
+- 若用户独立跑本 Skill：提示可用活动页 `fe-activity-agent` 并指定「按 `requirements.md` / `interaction.md` 还原」。

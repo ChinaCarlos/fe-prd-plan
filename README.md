@@ -51,7 +51,10 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/uninst
 默认：`docs/prd/<归档名>/`（其下含 `source/`、`plan.md`、`requirements.md`、`interaction.md` 等）。  
 也可在对话中指定活动/页面目录下的 `prd/`（门禁确认后生效）。
 
-**被其它 Skill 调用**（如活动仓 `fe-activity-agent`）：在上下文写明 `outputDir: <path>`，优先于默认路径；见 `skills/fe-prd-plan/references/flow-locate.md`。
+**被其它 Skill 调用**（如活动仓 `fe-activity-agent`）：在上下文写明 `outputDir: <path>`，优先于默认路径；见 `skills/fe-prd-plan/references/flow-locate.md`。  
+活动仓若还要**实现/还原页面**：应由 `fe-activity-agent` 编排后再调本插件（本 Skill description 已写路由优先级）。
+
+截图与附件统一落在 `{outputDir}/source/assets/`。
 
 ## 环境要求
 

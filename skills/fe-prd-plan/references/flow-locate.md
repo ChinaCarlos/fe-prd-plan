@@ -46,6 +46,8 @@ Figma：<可选>
 
 完成后在对话中回报实际 `outputDir`，供调用方继续实现流程。
 
+调用方已指定 `outputDir` 且用户本轮已确认目录时：门①走 **`flow-gates.md`「轻量门①」**，勿再问子包/活动名。
+
 ## 目录尚不存在
 
 - 门①通过后可 `mkdir -p` 创建 `outputDir`（及 `source/`、`source/assets/`）。

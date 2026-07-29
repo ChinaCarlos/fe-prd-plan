@@ -18,11 +18,15 @@
 ## 调用顺序（每个 scope）
 
 1. `list_files`（每个会话至少一次；换文件再调）
-2. `get_screenshot`（带 scope `nodeId` + connected `fileKey`）— 视觉基准；可在对话展示，**不要**写入业务 `images/`
-   - **注意**：截图通常以 Base64 JSON 形式输出至临时文本文件，须解析后解码保存，严禁使用通配符拷贝导致文件覆盖。
-3. `get_node(scopeNodeId)` — 层级、bounds、TEXT、明显控件 Frame
-4. 可选 `get_design_context`（depth 适中）辅助分区语义
-5. **禁止** `save_screenshots` 以及任何切图落盘
+2. `get_screenshot`（带 scope `nodeId` + connected `fileKey`）— 视觉基准；**可在对话展示**
+3. **落盘存证（强制统一路径）**：将截图解码后写入  
+   `{outputDir}/source/assets/design_screenshot.png`  
+   （多 scope 时：主 scope 用此文件名；其余用 `design_screenshot_2.png`、`design_screenshot_3.png` …）  
+   - 截图常以 Base64/临时文本返回：须解析解码后写入上述路径；**禁止**通配符拷贝覆盖错文件  
+   - **禁止**写入业务活动 `images/`（那是实现 Skill 切图目录）  
+   - **禁止** `save_screenshots`（分项切图）
+4. `get_node(scopeNodeId)` — 层级、bounds、TEXT、明显控件 Frame
+5. 可选 `get_design_context`（depth 适中）辅助分区语义
 
 调用前用 `GetDynamicTools` 核对当前命名空间下工具 schema，再 `CallDynamicTool`。
 
@@ -35,6 +39,7 @@
 - 控件清单（按钮 / Tab / 列表 / 输入等）+ 推测交互 + **置信度**
 - TEXT 预归类：`whole-btn-text` / `jsx-fixed` / `dynamic` / `未知`
 - 状态与缺口（稿面已见 vs PRD 提到但未见）
+- 截图相对路径：`source/assets/design_screenshot.png`（或 `_2` …）
 
 **置信度低或未见的态不得写成既定事实**——进缺口表，留给门③ / `open-questions.md`。
 

@@ -49,20 +49,20 @@ node "<本 skill 目录>/scripts/check-deps.mjs"
 3. **登录判断**：仅当确认拿不到目标内容且为登录问题时，请用户在本机浏览器登录后告知继续
 4. `POST /eval` 探 DOM，再定提取表达式（不套固定模板）
 5. 分页/懒加载：`GET /scroll?target=ID&direction=bottom`
-6. 提取结构化正文；可公开图片下载到 `assets/`；需登录的资源用 navigate + `/screenshot`
+6. 提取结构化正文；可公开图片下载到 `source/assets/`；需求页关键截图优先存为 `source/assets/prd_screenshot.png`（多图用 `prd_screenshot_2.png` …）；需登录的资源用 navigate + `/screenshot` 后同样落入 `source/assets/`
 7. `GET /close?target=ID` 关闭自建 tab
 
 ## ④ 归档落盘
 
 - 根目录 = 门①确认的 **`outputDir`**
 - 正文 → `outputDir/source/<归档文件名>.md`
-- 图片 → `outputDir/source/assets/`
+- 图片 → **`outputDir/source/assets/`**（与 Figma 存证同一目录；**禁止**另建 `outputDir/assets/`）
 - **归档注意事项（强制避免覆盖）**：
   - **禁止使用通配符**：严禁 `cp *.png`。必须根据工具返回的确切路径或 ID 进行操作。
-  - **大文件解析**：Figma MCP 截图可能以 Base64 JSON 形式存在临时文本文件中，必须通过脚本解析 `base64` 字段并解码后落盘，不可直接重命名。
+  - **大文件解析**：截图可能以 Base64 JSON 形式存在临时文本文件中，必须通过脚本解析 `base64` 字段并解码后落盘，不可直接重命名。
 - 已存在则提示复用，不覆盖，除非用户要求刷新
 
-（兼容说明：旧版默认 `docs/prd/<归档名>/` 等价于 `outputDir` 取该路径且可不建 `source/` 子目录；**新流程优先 `outputDir/source/`**，若用户明确要求逆向落在 `outputDir` 根下也可，须在门①写清。）
+（兼容说明：旧版默认 `docs/prd/<归档名>/` 等价于 `outputDir` 取该路径且可不建 `source/` 子目录；**新流程优先 `outputDir/source/`**，若用户明确要求扁平落在 `outputDir` 根下也可，须在门①写清。）
 
 ## ⑤ Secret Scan
 

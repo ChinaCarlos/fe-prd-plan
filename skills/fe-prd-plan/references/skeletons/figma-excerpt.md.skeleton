@@ -42,4 +42,5 @@ generated_by: fe-prd-plan
 | ... | ... | ... |
 
 ## 截图说明
-对话中已展示 scope 截图；**未**写入业务 images 目录。
+
+已落盘：`source/assets/design_screenshot.png`（多 scope 见 `_2` …）。**未**写入业务 `images/`。对话中可同步展示。

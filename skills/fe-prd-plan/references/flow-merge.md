@@ -14,6 +14,18 @@
 
 骨架：[`skeletons/requirements.md.skeleton`](skeletons/requirements.md.skeleton)、[`skeletons/interaction.md.skeleton`](skeletons/interaction.md.skeleton)。
 
+## 资源路径（统一 · 禁止分裂）
+
+所有本地图片/截图只放在 **`{outputDir}/source/assets/`**：
+
+| 文件 | 用途 | Markdown 引用（相对 `outputDir` 根下的 md） |
+|------|------|-----------------------------------------------|
+| `source/assets/prd_screenshot.png` | 需求页/原型截图（拉文时若有） | `![需求原型](source/assets/prd_screenshot.png)` |
+| `source/assets/design_screenshot.png` | Figma scope 主截图 | `![设计稿](source/assets/design_screenshot.png)` |
+| `source/assets/design_screenshot_N.png` | 额外 Figma scope | 同上规则 |
+
+**禁止**再使用 `outputDir/assets/`（无 `source` 前缀）或业务 `images/` 作为本 Skill 存证目录。无截图时：删掉对应 `![...]` 行，勿留死链。
+
 ## 优先级（写死）
 
 | 维度 | 优先来源 |
@@ -26,14 +38,14 @@
 
 ## `requirements.md` 侧重
 
-- **视觉存证**：文首强制嵌入 `![需求原型图](source/assets/prd_screenshot.png)`（若有）。
+- **视觉存证**：若有文件则文首嵌入 `![需求原型](source/assets/prd_screenshot.png)`
 - 业务概述、功能模块、校验、数据/字段
 - 与 `plan.md` 任务 id 映射
 - UI 只保留与业务相关的说明；细交互以 `interaction.md` 为准
 
 ## `interaction.md` 侧重
 
-- **视觉存证**：文首强制嵌入 `![设计稿截图](assets/design_screenshot.png)`（若有）。
+- **视觉存证**：若有文件则文首嵌入 `![设计稿](source/assets/design_screenshot.png)`
 - 按 Surface（主界面 / Tab / 弹窗）描述结构与交互流
 - 状态：Normal / Loading / Empty / Error / Disabled（缺则写「未提供」）
 - TEXT 策略表（与摘录归类对齐）
@@ -48,8 +60,9 @@
 
 - 骨架占位符 `<...>` 已清空
 - `open-questions.md` 无未决策冲突仍被写成肯定句
+- 文内图片路径均指向 `source/assets/`，无 `assets/...` 裸路径、无死链
 - frontmatter：`status: draft`；用户门④确认后改为 `status: confirmed` 并注明确认时间
 
 ## 门④ 通过后
 
-对话给出路径列表 +「本 Skill 不写代码；实现请另开/继续实现类 Skill 并引用上述文档」。
+对话给出路径列表 +「本 Skill 不写代码」。有调用方则交还；无则提示可用实现类 Skill 引用上述文档。

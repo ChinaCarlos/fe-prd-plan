@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+- **路由**：活动仓实现场景让位 `fe-activity-agent`，避免与本 Skill 抢入口；description 同步
+- **门①轻量**：调用方已指定 `outputDir` 且目录已确认时，一次复述确认，不重复问子包/活动名
+- **截图路径统一**：一律 `{outputDir}/source/assets/`（`prd_screenshot` / `design_screenshot`）；禁止分裂的 `assets/` 裸路径
+- 明确 `status: confirmed` 判定；门④后交还调用方，不重复开「是否开始实现」
+
 ## 0.2.1
 - `flow-locate`：明确 `outputDir` 优先级与外部 Skill（如 fe-activity-agent）调用契约（`outputDir:` 行优先于默认 `docs/prd/`）
 - `SKILL.md`：补充「被其它 Skill 调用」说明
