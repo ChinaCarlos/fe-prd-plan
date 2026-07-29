@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+- 修正 `figma-excerpt.md.skeleton` 文首图路径为 `source/assets/design_screenshot.png`
+- `flow-locate` 调用方契约示例与 agent 轻量门①文案对齐
+
 ## 0.2.2
 - **路由**：活动仓实现场景让位 `fe-activity-agent`，避免与本 Skill 抢入口；description 同步
 - **门①轻量**：调用方已指定 `outputDir` 且目录已确认时，一次复述确认，不重复问子包/活动名
