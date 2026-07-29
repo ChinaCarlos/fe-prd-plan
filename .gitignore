@@ -8,3 +8,6 @@ skills/fe-prd-plan/references/site-patterns/*.md
 
 # 安装标记（本机记录，不共享）
 .risk_notice_shown
+
+# 工作区跑 Skill 时落在插件仓库外的产物；若误在本仓生成也不入库
+docs/prd/
