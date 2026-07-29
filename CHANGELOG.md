@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+- `flow-locate`：明确 `outputDir` 优先级与外部 Skill（如 fe-activity-agent）调用契约（`outputDir:` 行优先于默认 `docs/prd/`）
+- `SKILL.md`：补充「被其它 Skill 调用」说明
+
 ## 0.2.0
 - 可选 **spark-figma-mcp** 只读识别设计稿交互，与 PRD 合成 `requirements.md` + `interaction.md`
 - 插件根新增 `.mcp.json`；`install.sh` 同步安装

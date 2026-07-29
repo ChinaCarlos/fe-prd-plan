@@ -61,8 +61,13 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 ### 默认 `outputDir`
 
+- **调用方已传 `outputDir:`**（如 `fe-activity-agent`）：优先采用，见 [`flow-locate.md`](references/flow-locate.md)「优先级」与「调用方契约」
 - 未指定：`docs/prd/<归档目录名>/`（归档名须门禁 ① 确认）
 - 用户指定活动/页面目录时：落在该目录下的 `prd/`（例如 `packages/<pkg>/src/pages/<activity>/prd/`），**禁止**写死单一业务仓库路径
+
+## 被其它 Skill 调用
+
+外部 Skill 无 IPC：须 **Read** 本 `SKILL.md` 与 `references/`，并在上下文写明 `outputDir` / 需求 / Figma。本 Skill 仍跑完自身门①～④；定稿后回报路径，**不**自动写业务代码。
 
 ## 人工门禁（强制）
 
