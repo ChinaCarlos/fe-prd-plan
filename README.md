@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/instal
 }
 ```
 
-若你**已经**在 `~/.cursor/mcp.json` 或项目里配置了同名服务，以已连接实例为准，无需刻意再开一套。使用 Figma 支路前请用桌面端打开文件并 Run **Spark-Figma-Plugin**。
+若你**已经**在 `~/.cursor/mcp.json` 或项目里配置了同名服务，以已连接实例为准，无需刻意再开一套。使用 Figma 支路前请在桌面端打开文件并 Run [**Spark-Figma-Plugin**](https://www.figma.com/community/plugin/1663788039337307446/spark-figma-plugin) 配套使用。
 
 ## 卸载
 
@@ -50,6 +50,8 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/uninst
 
 默认：`docs/prd/<归档名>/`（其下含 `source/`、`plan.md`、`requirements.md`、`interaction.md` 等）。  
 也可在对话中指定活动/页面目录下的 `prd/`（门禁确认后生效）。
+
+**被其它 Skill 调用**（如活动仓 `fe-activity-agent`）：在上下文写明 `outputDir: <path>`，优先于默认路径；见 `skills/fe-prd-plan/references/flow-locate.md`。
 
 ## 环境要求
 
