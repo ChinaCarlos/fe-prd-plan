@@ -85,10 +85,34 @@ curl -s "http://localhost:3456/scroll?target=ID&direction=bottom"
 ```
 
 ### GET /screenshot?target=ID&file=/tmp/shot.png
-截图。指定 `file` 参数保存到本地文件；不指定则返回图片二进制。可选 `format=jpeg`。
+截图。默认 `fullPage=true`（依赖 `Page.getLayoutMetrics` 读 `document` 布局高度撑视口截图）；指定 `file` 参数保存到本地文件，不指定则返回图片二进制；可选 `format=jpeg`。
 ```bash
 curl -s "http://localhost:3456/screenshot?target=ID&file=/tmp/shot.png"
 ```
+
+⚠️ **虚拟滚动/窗口化渲染的文档编辑器**（`document`/`body` 恒等于视口高度，真正正文在内部某个 `div` 里滚动，常见于钉钉文档 `/note/preview`）用这个接口会截不全——不是接口的 bug，是它读到的"页面高度"本身就是假的。这种情况改用下面两个接口，流程见 `flow-fetch.md`「③a 虚拟滚动分支」。
+
+### GET /find-scroll-container?target=ID&selector=CSS(可选)
+探测页面里真正可滚动的正文容器（应对上面提到的虚拟滚动场景）。不传 `selector` 时用启发式规则自动找 `overflow: auto/scroll` 且 `scrollHeight` 明显大于 `clientHeight` 的最大候选元素；找到后会给它打临时属性 `data-cdp-scroll-target="1"`，后续可直接拿 `[data-cdp-scroll-target="1"]` 当选择器，不依赖前端框架生成的哈希 class 名。
+```bash
+curl -s "http://localhost:3456/find-scroll-container?target=ID"
+```
+返回 `{found:false}` 说明该页面其实是 document 级滚动，直接用 `/scroll` + `/screenshot?fullPage=true` 即可。
+
+### POST /capture-scroll?target=ID
+对（自动探测或指定的）滚动容器按其可视高度为步长逐屏截图，直至滚到底，产出 `outDir/slice_N.png` + `outDir/manifest.json`（含容器几何信息 `geo` 与每张切片对应的 `scrollTop`）。**只截图，不提取文字**——正文文字仍需用 `/eval` 对同一容器分段读 `innerText`。
+```bash
+curl -s -X POST "http://localhost:3456/capture-scroll?target=ID" \
+  -H 'Content-Type: application/json' \
+  -d '{"outDir":"/abs/path/to/outputDir/source/assets/_capture_tmp"}'
+```
+Body 字段：`outDir`（必填，绝对路径）、`selector`（可选，跳过自动探测）、`step`（可选，滚动步长 px，默认用容器 `clientHeight`）、`maxSteps`（可选，默认 30，硬上限 60）、`settleMs`（可选，每步截图前的等待毫秒，默认 500，给虚拟滚动的懒渲染留时间）。
+
+拿到 `manifest.json` 后用 Pillow 拼成一张完整长图：
+```bash
+python3 "<本 skill 目录>/scripts/stitch-long-page.py" outDir/manifest.json outputDir/source/assets/prd_full_page.png
+```
+`check-deps.mjs` 会预检 `python3` + `Pillow`，缺失时按提示 `pip3 install --quiet Pillow`。拼好后删除切片与 `manifest.json`，只保留最终长图。
 
 ## /eval 使用提示
 

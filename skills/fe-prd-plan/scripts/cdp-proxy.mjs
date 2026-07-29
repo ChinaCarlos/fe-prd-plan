@@ -619,6 +619,138 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // GET /find-scroll-container?target=xxx&selector=CSS(可选)
+    // 探测页面「真正可滚动」的正文容器（应对虚拟滚动/窗口化渲染的富文本编辑器，
+    // 如钉钉文档 /note/preview：document/body 本身不滚动，真实内容在内部 div 里）。
+    // 找到后会给该元素打上临时属性 data-cdp-scroll-target="1"，供 /capture-scroll 直接选中，
+    // 避免依赖 styled-components 等生成的哈希 class 名（每次构建可能变化，不可硬编码）。
+    else if (pathname === '/find-scroll-container') {
+      const sid = await ensureSession(q.target);
+      const TAG_ATTR = 'data-cdp-scroll-target';
+      const js = q.selector
+        ? `(function(){
+            var el = document.querySelector(${JSON.stringify(q.selector)});
+            if (!el) return JSON.stringify({found:false, reason:'selector 未命中'});
+            el.setAttribute('${TAG_ATTR}', '1');
+            var rect = el.getBoundingClientRect();
+            return JSON.stringify({found:true, top:rect.top, left:rect.left, width:rect.width, height:rect.height, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, dpr:window.devicePixelRatio});
+          })()`
+        : `(function(){
+            // 启发式：找 overflow auto/scroll 且 scrollHeight 明显大于 clientHeight 的最大候选元素，
+            // 排除过矮的装饰性滚动区（如小型 tooltip）。document.scrollingElement 本身可滚动时也会被比较到。
+            var candidates = Array.from(document.querySelectorAll('body *')).filter(function(el){
+              var cs = getComputedStyle(el);
+              return (cs.overflowY === 'auto' || cs.overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 40 && el.clientHeight > 100;
+            });
+            if (!candidates.length) return JSON.stringify({found:false, reason:'未发现候选容器，页面可能本身就是 document 级滚动，直接用 /scroll 即可'});
+            candidates.sort(function(a,b){ return (b.scrollHeight-b.clientHeight) - (a.scrollHeight-a.clientHeight); });
+            var el = candidates[0];
+            el.setAttribute('${TAG_ATTR}', '1');
+            var rect = el.getBoundingClientRect();
+            return JSON.stringify({found:true, top:rect.top, left:rect.left, width:rect.width, height:rect.height, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, dpr:window.devicePixelRatio, candidateCount:candidates.length});
+          })()`;
+      const resp = await sendCDP('Runtime.evaluate', { expression: js, returnByValue: true }, sid);
+      let val;
+      try { val = JSON.parse(resp.result?.result?.value); } catch { val = { found: false, reason: '探测脚本执行失败' }; }
+      if (!val.found) { res.statusCode = 404; }
+      res.end(JSON.stringify(val));
+    }
+
+    // POST /capture-scroll?target=xxx (body JSON: {selector?, outDir, step?, maxSteps?, settleMs?})
+    // 应对虚拟滚动/窗口化渲染文档：无法一次性截长图（fullPage 截图依赖 document 布局尺寸，
+    // 这类页面 document 高度恒等于视口高度，量不出真实内容高度）。
+    // 做法：定位真实滚动容器（不传 selector 则自动探测，见 /find-scroll-container），
+    // 按容器可视高度为步长逐屏截图，直到滚到底；产出 outDir/slice_N.png + manifest.json。
+    // manifest 再交给 stitch-long-page.py（Pillow）拼成一张完整长图，供人工核对/存证。
+    // 注意：本接口只负责“截图切片”，抓正文文字仍应另用 /eval 对同一容器分段读 innerText
+    //（原因见 references/flow-fetch.md「虚拟滚动/长页面识别」），不要指望截图 OCR 替代文字提取。
+    else if (pathname === '/capture-scroll') {
+      const sid = await ensureSession(q.target);
+      let body;
+      try { body = JSON.parse((await readBody(req)) || '{}'); }
+      catch { res.statusCode = 400; res.end(JSON.stringify({ error: 'body 需为 JSON' })); return; }
+      const { outDir, selector, step, settleMs = 500 } = body;
+      const maxSteps = Math.min(body.maxSteps || 30, 60); // 硬上限，避免探测失误导致死循环式截图
+      if (!outDir) { res.statusCode = 400; res.end(JSON.stringify({ error: '需要 outDir（绝对路径）' })); return; }
+      fs.mkdirSync(outDir, { recursive: true });
+
+      const TAG_ATTR = 'data-cdp-scroll-target';
+      const detectJs = selector
+        ? `(function(){
+            var el = document.querySelector(${JSON.stringify(selector)});
+            if (!el) return JSON.stringify({found:false});
+            el.setAttribute('${TAG_ATTR}', '1');
+            var rect = el.getBoundingClientRect();
+            return JSON.stringify({found:true, top:rect.top, height:rect.height, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, dpr:window.devicePixelRatio});
+          })()`
+        : `(function(){
+            var candidates = Array.from(document.querySelectorAll('body *')).filter(function(el){
+              var cs = getComputedStyle(el);
+              return (cs.overflowY === 'auto' || cs.overflowY === 'scroll') && el.scrollHeight > el.clientHeight + 40 && el.clientHeight > 100;
+            });
+            if (!candidates.length) return JSON.stringify({found:false});
+            candidates.sort(function(a,b){ return (b.scrollHeight-b.clientHeight) - (a.scrollHeight-a.clientHeight); });
+            var el = candidates[0];
+            el.setAttribute('${TAG_ATTR}', '1');
+            var rect = el.getBoundingClientRect();
+            return JSON.stringify({found:true, top:rect.top, height:rect.height, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, dpr:window.devicePixelRatio});
+          })()`;
+      const detectResp = await sendCDP('Runtime.evaluate', { expression: detectJs, returnByValue: true }, sid);
+      let geo;
+      try { geo = JSON.parse(detectResp.result?.result?.value); } catch { geo = { found: false }; }
+      if (!geo.found) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: '未找到可滚动容器，可显式传 selector 重试', geo }));
+        return;
+      }
+
+      const targetSelector = `[${TAG_ATTR}="1"]`;
+      const clientH = step || geo.height;
+      let scrollTop = 0;
+      const shots = [];
+      for (let i = 0; i < maxSteps; i++) {
+        const scrollJs = `(function(){
+          var el = document.querySelector(${JSON.stringify(targetSelector)});
+          el.scrollTop = ${scrollTop};
+          el.dispatchEvent(new Event('scroll', {bubbles:true}));
+          return JSON.stringify({scrollTop: el.scrollTop, scrollHeight: el.scrollHeight});
+        })()`;
+        const stateResp = await sendCDP('Runtime.evaluate', { expression: scrollJs, returnByValue: true }, sid);
+        let state;
+        try { state = JSON.parse(stateResp.result?.result?.value); } catch { break; }
+        await new Promise(r => setTimeout(r, settleMs));
+        const shotResp = await sendCDP('Page.captureScreenshot', { format: 'png' }, sid);
+        const filePath = path.join(outDir, `slice_${i}.png`);
+        fs.writeFileSync(filePath, Buffer.from(shotResp.result.data, 'base64'));
+        shots.push({ scrollTop: state.scrollTop, file: filePath });
+
+        const nextTop = scrollTop + clientH;
+        if (nextTop >= state.scrollHeight) {
+          const finalTop = Math.max(state.scrollHeight - clientH, 0);
+          if (finalTop > state.scrollTop + 2) {
+            const finalJs = `(function(){
+              var el = document.querySelector(${JSON.stringify(targetSelector)});
+              el.scrollTop = ${finalTop};
+              el.dispatchEvent(new Event('scroll', {bubbles:true}));
+              return el.scrollTop;
+            })()`;
+            await sendCDP('Runtime.evaluate', { expression: finalJs, returnByValue: true }, sid);
+            await new Promise(r => setTimeout(r, settleMs));
+            const finalShot = await sendCDP('Page.captureScreenshot', { format: 'png' }, sid);
+            const finalFile = path.join(outDir, `slice_${i + 1}.png`);
+            fs.writeFileSync(finalFile, Buffer.from(finalShot.result.data, 'base64'));
+            shots.push({ scrollTop: finalTop, file: finalFile });
+          }
+          break;
+        }
+        scrollTop = nextTop;
+      }
+
+      const manifest = { geo, shots, selector: targetSelector };
+      fs.writeFileSync(path.join(outDir, 'manifest.json'), JSON.stringify(manifest, null, 2));
+      res.end(JSON.stringify(manifest));
+    }
+
     // GET /info?target=xxx - 获取页面信息
     else if (pathname === '/info') {
       const sid = await ensureSession(q.target);
@@ -643,8 +775,10 @@ const server = http.createServer(async (req, res) => {
           '/info?target=': 'GET - 页面标题/URL/状态',
           '/eval?target=': 'POST body=JS表达式 - 执行 JS',
           '/click?target=': 'POST body=CSS选择器 - 点击元素',
-          '/scroll?target=&y=&direction=': 'GET - 滚动页面',
-          '/screenshot?target=&file=': 'GET - 截图',
+          '/scroll?target=&y=&direction=': 'GET - 滚动页面（仅 window/document 级）',
+          '/screenshot?target=&file=': 'GET - 截图（fullPage 依赖 document 布局尺寸，虚拟滚动页面会截不全）',
+          '/find-scroll-container?target=&selector=': 'GET - 探测/标记真正可滚动的正文容器（应对虚拟滚动编辑器）',
+          '/capture-scroll?target=': 'POST body={outDir,selector?,step?,maxSteps?,settleMs?} - 对内部滚动容器分段截图，产出可拼接长图的 manifest',
         },
       }));
     }

@@ -10,7 +10,7 @@
 // 持久偏好 → scripts/config.env（skill 内，gitignored）
 // 单次覆盖 → --browser 命令行参数（全链路 argv，不碰 process.env）
 
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -54,6 +54,21 @@ function checkNode() {
   const version = `v${process.versions.node}`;
   if (major >= 22) console.log(`node: ok (${version})`);
   else console.log(`node: warn (${version}, 建议升级到 22+)`);
+}
+
+// --- python3 + Pillow 检查（虚拟滚动长页面拼接 stitch-long-page.py 依赖，非阻塞）---
+
+function checkPythonPillow() {
+  try {
+    const r = spawnSync('python3', ['-c', 'import PIL; print(PIL.__version__)'], { encoding: 'utf8' });
+    if (r.status === 0) {
+      console.log(`python3+Pillow: ok (${r.stdout.trim()})`);
+    } else {
+      console.log('python3+Pillow: warn（长页面拼接 stitch-long-page.py 需要，遇到虚拟滚动文档时执行一次: pip3 install --quiet Pillow）');
+    }
+  } catch {
+    console.log('python3: warn（未检测到 python3，长页面拼接脚本不可用，不影响文字抓取主流程）');
+  }
 }
 
 // --- CDP Proxy 启动与等待 ---
@@ -187,6 +202,7 @@ async function main() {
   const opts = parseArgs(process.argv.slice(2));
   ensureConfigExists();
   checkNode();
+  checkPythonPillow();
 
   const { proceed, exitCode, browserId } = await resolveAndReport(opts.browser);
   if (!proceed) process.exit(exitCode);

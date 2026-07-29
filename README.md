@@ -4,7 +4,7 @@
 
 ## 它是什么
 
-- **文档拉取**：通过 CDP 操控本机已登录的 Chrome/Edge 读取需求正文（Confluence、钉钉、飞书等），无需平台专用 API。
+- **文档拉取**：通过 CDP 操控本机已登录的 Chrome/Edge 读取需求正文（Confluence、钉钉、飞书等），无需平台专用 API；内置虚拟滚动长文档（如钉钉文档预览页）分段截图 + 自动拼长图能力，只抓当前文档内容，不递归展开正文里的外部链接。
 - **实现计划**：拆解为任务级 `plan.md`，分型 `tdd` / `ui-verify` / `build-verify` / `docs`。
 - **详细需求**：产出 `requirements.md`（业务）与 `interaction.md`（交互/UI）。
 - **可选 Figma**：用户提供设计链接时，用 **spark-figma-mcp** 只读分析 `scopeNodeId` 子树，与 PRD 合成交互文档（**不切图、不写业务代码**）。

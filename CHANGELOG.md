@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+- **虚拟滚动长页面支持**：新增 `cdp-proxy` 接口 `GET /find-scroll-container`（自动探测/标记页面真实可滚动的正文容器，不依赖易变的哈希 class 名）与 `POST /capture-scroll`（对该容器分段截图，产出可拼接的 `manifest.json`）
+- 新增 `scripts/stitch-long-page.py`（Pillow）将 `/capture-scroll` 产出的切片拼接为一张完整长图；`check-deps.mjs` 同步预检 `python3` + `Pillow`
+- `flow-fetch.md` 新增「③a 虚拟滚动分支」「③b 内嵌附件与外部链接边界」；`cdp-api.md` / `site-patterns/alidocs.dingtalk.com.md` 同步补充用法与踩坑记录
+- **强制新规则**：禁止为「抓全」递归打开文档正文中的外部链接逐个解析；仅当内嵌附件是关键数据唯一来源时才可单独打开，且需在门②说明
+
 ## 0.2.3
 - 修正 `figma-excerpt.md.skeleton` 文首图路径为 `source/assets/design_screenshot.png`
 - `flow-locate` 调用方契约示例与 agent 轻量门①文案对齐
