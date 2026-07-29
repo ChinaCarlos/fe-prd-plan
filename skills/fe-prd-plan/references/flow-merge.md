@@ -26,12 +26,14 @@
 
 ## `requirements.md` 侧重
 
+- **视觉存证**：文首强制嵌入 `![需求原型图](source/assets/prd_screenshot.png)`（若有）。
 - 业务概述、功能模块、校验、数据/字段
 - 与 `plan.md` 任务 id 映射
 - UI 只保留与业务相关的说明；细交互以 `interaction.md` 为准
 
 ## `interaction.md` 侧重
 
+- **视觉存证**：文首强制嵌入 `![设计稿截图](assets/design_screenshot.png)`（若有）。
 - 按 Surface（主界面 / Tab / 弹窗）描述结构与交互流
 - 状态：Normal / Loading / Empty / Error / Disabled（缺则写「未提供」）
 - TEXT 策略表（与摘录归类对齐）

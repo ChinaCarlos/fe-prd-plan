@@ -18,16 +18,16 @@
 ## 调用顺序（每个 scope）
 
 1. `list_files`（每个会话至少一次；换文件再调）
-2. `get_screenshot`（带 scope `nodeId` + connected `fileKey`）— 视觉基准；可在对话展示，**不要**写入业务 `images/`
+2. `get_screenshot`（带 scope `nodeId` + connected `fileKey`）— **强制**获取视觉基准；**必须**将其 Base64 转换为 PNG 存至 `outputDir/assets/design_screenshot.png`；可在对话展示，**不要**写入业务 `images/`
 3. `get_node(scopeNodeId)` — 层级、bounds、TEXT、明显控件 Frame
 4. 可选 `get_design_context`（depth 适中）辅助分区语义
-5. **禁止** `save_screenshots` 以及任何切图落盘
+5. **禁止** `save_screenshots` 以及任何切图落盘（除上述 `design_screenshot.png` 外）
 
 调用前用 `GetDynamicTools` 核对当前命名空间下工具 schema，再 `CallDynamicTool`。
 
 ## 识别产出（写入 `outputDir/figma-excerpt.md`）
 
-按 [`skeletons/figma-excerpt.md.skeleton`](skeletons/figma-excerpt.md.skeleton) 填写，至少包含：
+按 [`skeletons/figma-excerpt.md.skeleton`](skeletons/figma-excerpt.md.skeleton) 填写，且**文首必须嵌入 `![设计稿](assets/design_screenshot.png)`**。至少包含：
 
 - Scope 元信息（url、scopeNodeId、connected fileKey）
 - 页面分区表
