@@ -558,19 +558,64 @@ const server = http.createServer(async (req, res) => {
     }
 
     // GET /screenshot?target=xxx&file=/tmp/x.png - 截图
+    // 默认执行全屏截图，除非传入 fullPage=false
     else if (pathname === '/screenshot') {
       const sid = await ensureSession(q.target);
       const format = q.format || 'png';
-      const resp = await sendCDP('Page.captureScreenshot', {
-        format,
-        quality: format === 'jpeg' ? 80 : undefined,
-      }, sid);
+      const fullPage = q.fullPage !== 'false';
+
+      let screenshotData;
+
+      if (fullPage) {
+        try {
+          // 1. 获取页面布局指标
+          const metrics = await sendCDP('Page.getLayoutMetrics', {}, sid);
+          const contentSize = metrics.result?.contentSize || metrics.result?.cssContentSize;
+
+          if (contentSize) {
+            // 2. 强制覆盖视口尺寸以匹配内容高度
+            await sendCDP('Emulation.setDeviceMetricsOverride', {
+              width: contentSize.width,
+              height: contentSize.height,
+              deviceScaleFactor: 1,
+              mobile: false,
+            }, sid);
+
+            // 3. 截图 (使用 captureBeyondViewport 增强兼容性)
+            const resp = await sendCDP('Page.captureScreenshot', {
+              format,
+              quality: format === 'jpeg' ? 80 : undefined,
+              captureBeyondViewport: true,
+            }, sid);
+            screenshotData = resp.result.data;
+
+            // 4. 清除覆盖
+            await sendCDP('Emulation.clearDeviceMetricsOverride', {}, sid);
+          } else {
+            throw new Error('无法获取页面内容尺寸');
+          }
+        } catch (err) {
+          console.warn('[CDP Proxy] 全屏截图失败，退回到普通截图:', err.message);
+          const resp = await sendCDP('Page.captureScreenshot', {
+            format,
+            quality: format === 'jpeg' ? 80 : undefined,
+          }, sid);
+          screenshotData = resp.result.data;
+        }
+      } else {
+        const resp = await sendCDP('Page.captureScreenshot', {
+          format,
+          quality: format === 'jpeg' ? 80 : undefined,
+        }, sid);
+        screenshotData = resp.result.data;
+      }
+
       if (q.file) {
-        fs.writeFileSync(q.file, Buffer.from(resp.result.data, 'base64'));
+        fs.writeFileSync(q.file, Buffer.from(screenshotData, 'base64'));
         res.end(JSON.stringify({ saved: q.file }));
       } else {
         res.setHeader('Content-Type', 'image/' + format);
-        res.end(Buffer.from(resp.result.data, 'base64'));
+        res.end(Buffer.from(screenshotData, 'base64'));
       }
     }
 

@@ -49,7 +49,7 @@ node "<本 skill 目录>/scripts/check-deps.mjs"
 3. **登录判断**：仅当确认拿不到目标内容且为登录问题时，请用户在本机浏览器登录后告知继续
 4. `POST /eval` 探 DOM，再定提取表达式（不套固定模板）
 5. 分页/懒加载：`GET /scroll?target=ID&direction=bottom`
-6. 提取结构化正文；可公开图片下载到 `source/assets/`；需求页关键截图优先存为 `source/assets/prd_screenshot.png`（多图用 `prd_screenshot_2.png` …）；需登录的资源用 navigate + `/screenshot` 后同样落入 `source/assets/`
+6. 提取结构化正文；可公开图片下载到 `source/assets/`；**强制**抓取页面**全屏**（Capture Full Page）截图存为 `source/assets/prd_screenshot.png`（`cdp-proxy` 已默认支持全屏捕获）；需登录的资源用 navigate + `/screenshot` 后同样落入 `source/assets/`
 7. `GET /close?target=ID` 关闭自建 tab
 
 ## ④ 归档落盘
