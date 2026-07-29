@@ -41,7 +41,7 @@
 outputDir: /abs/path/to/packages/partyActivity/src/pages/foo_activity/prd
 需求：<url 或说明>
 Figma：<可选>
-说明：outputDir 已由调用方指定；门①复述后等用户确认即可
+说明：目录与 outputDir 用户已确认；请走轻量门①，勿改用默认 docs/prd/；门④后交还本调用方，勿再问是否开始写代码
 ```
 
 完成后在对话中回报实际 `outputDir`，供调用方继续实现流程。
