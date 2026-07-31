@@ -68,7 +68,7 @@ cp -R "$TMP_DIR/repo/.cursor-plugin" "$INSTALL_DIR/.cursor-plugin"
 cp -R "$TMP_DIR/repo/skills" "$INSTALL_DIR/skills"
 if [ -f "$TMP_DIR/repo/.mcp.json" ]; then
   cp "$TMP_DIR/repo/.mcp.json" "$INSTALL_DIR/.mcp.json"
-  info "已安装插件 MCP 声明（.mcp.json → spark-figma-mcp）"
+  info "已安装插件 MCP 声明（.mcp.json → xc-figma-mcp）"
 fi
 
 # --- 还原本机生成的文件 ---
@@ -107,5 +107,5 @@ fi
 
 info "安装完成 ✅  安装目录：$INSTALL_DIR"
 info "下一步：在 Cursor 命令面板执行 \"Developer: Reload Window\" 使其生效。"
-info "若已在 ~/.cursor/mcp.json 配置 spark-figma-mcp，Reload 后优先用已有连接即可。"
+info "若已在 ~/.cursor/mcp.json 配置 xc-figma-mcp，Reload 后优先用已有连接即可。"
 info "再次运行本命令即可更新到最新版本（会保留你的浏览器偏好与站点经验）。"

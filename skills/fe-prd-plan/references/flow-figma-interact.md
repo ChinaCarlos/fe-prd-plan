@@ -7,9 +7,9 @@
 
 ## 前置
 
-1. 确认会话中 **spark-figma-mcp**（或 `user-spark-figma-mcp`）可用；优先用**已连接**实例，避免与插件 `.mcp.json` 重复拉起冲突。
+1. 确认会话中 **xc-figma-mcp**（或 `user-xc-figma-mcp`）可用；优先用**已连接**实例，避免与插件 `.mcp.json` 重复拉起冲突。
 2. 调用 **`list_files`**：拿到插件实际连接的 `fileKey`（常为 `unsaved-*`）。**禁止**只用 URL 里的永久 `fileKey` 导致误报未连接。
-3. `list_files` 为空或失败 → 暂停：请用户用桌面 Figma 打开文件并 Run **Spark-Figma-Plugin**，完成后重试。可降级为「本次跳过 Figma，仅 PRD 出文档」。
+3. `list_files` 为空或失败 → 暂停：请用户用桌面 Figma 打开文件并 Run **Xc-Figma-Plugin**，完成后重试。可降级为「本次跳过 Figma，仅 PRD 出文档」。
 
 ## 范围（强制）
 
@@ -51,7 +51,7 @@
 
 ## 设计截图直读（无 Figma 链接）
 
-**适用场景**：用户没给 Figma URL，而是直接在对话里贴了设计稿/交互稿的截图（高保真图、线框图、状态说明图等）。没有 `fileKey`/`nodeId`，spark-figma-mcp 的 `list_files`/`get_node`/`get_design_context` 全用不上，**不要**为了凑节点数据反过来问用户要 Figma 链接卡住流程——截图本身就是这次的设计输入，直接读。
+**适用场景**：用户没给 Figma URL，而是直接在对话里贴了设计稿/交互稿的截图（高保真图、线框图、状态说明图等）。没有 `fileKey`/`nodeId`，xc-figma-mcp 的 `list_files`/`get_node`/`get_design_context` 全用不上，**不要**为了凑节点数据反过来问用户要 Figma 链接卡住流程——截图本身就是这次的设计输入，直接读。
 
 处理步骤：
 

@@ -8,7 +8,7 @@
 - **没有链接也能用**：需求或设计没有可访问链接时，直接把文档/设计截图贴给 Agent 即可，走截图直读支路（视觉识别转录，产出会如实标注精度低于链接/节点直读）。
 - **实现计划**：拆解为任务级 `plan.md`，分型 `tdd` / `ui-verify` / `build-verify` / `docs`。
 - **详细需求**：产出 `requirements.md`（业务）与 `interaction.md`（交互/UI）。
-- **可选 Figma**：用户提供设计链接时，用 **spark-figma-mcp** 只读分析 `scopeNodeId` 子树，与 PRD 合成交互文档（**不切图、不写业务代码**）。
+- **可选 Figma**：用户提供设计链接时，用 **xc-figma-mcp** 只读分析 `scopeNodeId` 子树，与 PRD 合成交互文档（**不切图、不写业务代码**）。
 
 不做需求分级、不建 hub/registry 重型状态机、不派发实现。
 
@@ -24,22 +24,22 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/instal
 
 再次运行同一命令 = 更新（保留 `config.env` 与 `site-patterns/`）。
 
-### MCP（spark-figma-mcp）
+### MCP（xc-figma-mcp）
 
 插件根目录含 [`.mcp.json`](.mcp.json)，声明：
 
 ```json
 {
   "mcpServers": {
-    "spark-figma-mcp": {
+    "xc-figma-mcp": {
       "command": "npx",
-      "args": ["-y", "spark-figma-mcp"]
+      "args": ["-y", "xc-figma-mcp"]
     }
   }
 }
 ```
 
-若你**已经**在 `~/.cursor/mcp.json` 或项目里配置了同名服务，以已连接实例为准，无需刻意再开一套。使用 Figma 支路前请在桌面端打开文件并 Run [**Spark-Figma-Plugin**](https://www.figma.com/community/plugin/1663788039337307446/spark-figma-plugin) 配套使用。
+若你**已经**在 `~/.cursor/mcp.json` 或项目里配置了同名服务，以已连接实例为准，无需刻意再开一套。使用 Figma 支路前请在桌面端打开文件并 Run [**Xc-Figma-Plugin**](https://www.figma.com/community/plugin/1663788039337307446/xc-figma-plugin) 配套使用。
 
 ## 卸载
 
@@ -61,7 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/uninst
 
 - Node.js 22+（原生 WebSocket；拉文档用）
 - 本机 Chrome 或 Edge，且已登录目标文档系统
-- 可选 Figma 支路：桌面 Figma + Spark-Figma-Plugin + spark-figma-mcp
+- 可选 Figma 支路：桌面 Figma + Xc-Figma-Plugin + xc-figma-mcp
 
 ## 风险提示
 

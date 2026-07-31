@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- MCP / 插件配置：`spark-figma-mcp` → **`xc-figma-mcp`**；配套插件文案与 Community 链接同步为 **Xc-Figma-Plugin** / `xc-figma-plugin`
+
 ## 0.4.0
 - **支持截图作为输入源（无链接场景）**：需求文档没有可访问链接时，可直接粘贴/发送需求文档截图，走 `flow-fetch.md`「②a 截图输入」——不走 CDP，靠 Agent 视觉能力逐张完整转录，落盘规则与完整性红线（③c）同样适用；设计稿同理，没有 Figma 链接时可直接贴设计截图，走 `flow-figma-interact.md`「设计截图直读」，产出须如实标注「来源为截图、精度低于 Figma 节点数据」，不得包装成同等精度
 - `SKILL.md` 模式表 / 触发条件、`flow-locate.md` 收集项、`flow-gates.md` 门①同步支持「链接或截图」两种输入描述
@@ -29,7 +32,7 @@
 - `SKILL.md`：补充「被其它 Skill 调用」说明
 
 ## 0.2.0
-- 可选 **spark-figma-mcp** 只读识别设计稿交互，与 PRD 合成 `requirements.md` + `interaction.md`
+- 可选 **xc-figma-mcp** 只读识别设计稿交互，与 PRD 合成 `requirements.md` + `interaction.md`
 - 插件根新增 `.mcp.json`；`install.sh` 同步安装
 - 明确 `outputDir`（默认 `docs/prd/<名>/`，可指定活动/页面下 `prd/`）与人工确认门 ①～④
 - 新增流程：`flow-overview` / `flow-locate` / `flow-gates` / `flow-figma-interact` / `flow-merge`

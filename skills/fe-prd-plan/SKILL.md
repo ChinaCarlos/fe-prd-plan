@@ -2,7 +2,7 @@
 name: fe-prd-plan
 description: >-
   Use when the user wants requirement docs fetched/planned in isolation (/prd-plan, or only PRD→plan with no activity-page implementation).
-  Fetch login-walled docs via CDP; optional Figma read-only via spark-figma-mcp; output plan/requirements/interaction.
+  Fetch login-walled docs via CDP; optional Figma read-only via xc-figma-mcp; output plan/requirements/interaction.
   IMPORTANT routing: If the workspace is an H5 activity monorepo (packages/partyActivity or packages/hh-active) AND the user
   also wants to build/restore an activity page (新建活动、还原 UI、fe-activity-agent), do NOT run this skill as the top-level
   entry — follow fe-activity-agent first; that skill will call this one with outputDir set.
@@ -11,7 +11,7 @@ description: >-
 
 # fe-prd-plan：需求文档拉取 + 计划拆分 +（可选）Figma 交互合成
 
-本 Skill 通过本机**已登录**的 Chrome/Edge（CDP）读取需求文档；可选地用 **spark-figma-mcp** 只读分析用户给出的 Figma `scopeNodeId` 子树，将 PRD 与设计识别结果合成为可给后续实现参考的文档。**不写业务代码、不切图落盘、不派发实现。**
+本 Skill 通过本机**已登录**的 Chrome/Edge（CDP）读取需求文档；可选地用 **xc-figma-mcp** 只读分析用户给出的 Figma `scopeNodeId` 子树，将 PRD 与设计识别结果合成为可给后续实现参考的文档。**不写业务代码、不切图落盘、不派发实现。**
 
 CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com/eze-is/web-access>），见仓库根 `LICENSE` Third-party notice。
 
@@ -95,11 +95,11 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 | ③ | Figma 摘录之后（无 Figma 则跳过） |
 | ④ | 合成定稿之前（冲突与缺口关闭） |
 
-## MCP（spark-figma-mcp）
+## MCP（xc-figma-mcp）
 
-- 插件根 [`.mcp.json`](../../.mcp.json) 声明了 `spark-figma-mcp`（`npx -y spark-figma-mcp`），供未配置过的环境安装后可用。
-- **若本机 `~/.cursor/mcp.json` 或项目已配置同名服务**：优先使用**已连接、可用**的那套；不要重复启动两套互相踩脚。命名空间可能是 `spark-figma-mcp` 或 `user-spark-figma-mcp`，以当前会话 `GetDynamicTools` / MCP 列表为准。
-- 使用前须：Figma **桌面端**打开目标文件，并 Run **Spark-Figma-Plugin**；`list_files` 为空则暂停并提示用户。
+- 插件根 [`.mcp.json`](../../.mcp.json) 声明了 `xc-figma-mcp`（`npx -y xc-figma-mcp`），供未配置过的环境安装后可用。
+- **若本机 `~/.cursor/mcp.json` 或项目已配置同名服务**：优先使用**已连接、可用**的那套；不要重复启动两套互相踩脚。命名空间可能是 `xc-figma-mcp` 或 `user-xc-figma-mcp`，以当前会话 `GetDynamicTools` / MCP 列表为准。
+- 使用前须：Figma **桌面端**打开目标文件，并 Run **Xc-Figma-Plugin**；`list_files` 为空则暂停并提示用户。
 - **只读工具**：`list_files` → `get_screenshot` / `get_node` / 可选 `get_design_context`。
 - **禁止**：`save_screenshots`、向业务 `images/` 切图、改页面/reducer/路由源码。
 
@@ -124,7 +124,7 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 - Node.js 22+（`check-deps.mjs` 会检查；低于 22 会 warn 仍可尝试）
 - 本机 Chrome 或 Edge，且已登录目标文档系统（拉链接时）
-- 有 Figma 支路时：桌面 Figma + Spark-Figma-Plugin + 可用的 spark-figma-mcp
+- 有 Figma 支路时：桌面 Figma + Xc-Figma-Plugin + 可用的 xc-figma-mcp
 - `scripts/*.mjs` 无额外 npm 依赖
 
 ## 完成后交接

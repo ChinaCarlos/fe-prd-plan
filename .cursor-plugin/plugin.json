@@ -2,7 +2,7 @@
   "name": "fe-prd-plan",
   "displayName": "FE PRD Plan",
   "version": "0.4.0",
-  "description": "通用需求文档拉取（CDP）+ 任务拆分；可选结合 spark-figma-mcp 识别设计稿交互，合成 requirements / interaction 文档",
+  "description": "通用需求文档拉取（CDP）+ 任务拆分；可选结合 xc-figma-mcp 识别设计稿交互，合成 requirements / interaction 文档",
   "author": {
     "name": "ChinaCarlos"
   },
@@ -16,7 +16,7 @@
     "requirements",
     "task-breakdown",
     "figma",
-    "spark-figma-mcp",
+    "xc-figma-mcp",
     "interaction"
   ],
   "skills": "./skills/"
