@@ -21,11 +21,11 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 ## 路由优先级（防与实现 Skill 抢入口）
 
-| 场景 | 谁先跑 |
-|------|--------|
-| 用户只要文档/计划（`/prd-plan`、明确「先别写代码」） | **本 Skill** |
-| 工作区含 `packages/partyActivity` 或 `packages/hh-active`，且用户要**新建/改活动页、还原 UI、联调实现** | **先 `fe-activity-agent`**；由它定目录并调用本 Skill（带 `outputDir:`） |
-| 上下文已有 `调用方：fe-activity-agent` | 本 Skill 作子流程，**勿**再建议用户「改去跑 activity-agent」打断当前文档门禁 |
+| 场景                                                                                                    | 谁先跑                                                                       |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 用户只要文档/计划（`/prd-plan`、明确「先别写代码」）                                                    | **本 Skill**                                                                 |
+| 工作区含 `packages/partyActivity` 或 `packages/hh-active`，且用户要**新建/改活动页、还原 UI、联调实现** | **先 `fe-activity-agent`**；由它定目录并调用本 Skill（带 `outputDir:`）      |
+| 上下文已有 `调用方：fe-activity-agent`                                                                  | 本 Skill 作子流程，**勿**再建议用户「改去跑 activity-agent」打断当前文档门禁 |
 
 ## 触发条件
 
@@ -38,37 +38,37 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 ## 必读流程（按顺序 Read）
 
-| 文档 | 用途 |
-|------|------|
-| [`references/flow-overview.md`](references/flow-overview.md) | 阶段总览与模式 |
-| [`references/flow-gates.md`](references/flow-gates.md) | 人工确认门 ①～④（含调用方轻量门①） |
-| [`references/flow-locate.md`](references/flow-locate.md) | 定 `outputDir` / 输入源 / Figma scopes |
-| [`references/flow-fetch.md`](references/flow-fetch.md) | CDP 拉取与归档 |
-| [`references/flow-figma-interact.md`](references/flow-figma-interact.md) | Figma 只读识别（有链接才走） |
-| [`references/flow-plan.md`](references/flow-plan.md) | 任务拆分与 plan |
-| [`references/flow-merge.md`](references/flow-merge.md) | PRD × Figma 合成规则 |
+| 文档                                                                     | 用途                                   |
+| ------------------------------------------------------------------------ | -------------------------------------- |
+| [`references/flow-overview.md`](references/flow-overview.md)             | 阶段总览与模式                         |
+| [`references/flow-gates.md`](references/flow-gates.md)                   | 人工确认门 ①～④（含调用方轻量门①）     |
+| [`references/flow-locate.md`](references/flow-locate.md)                 | 定 `outputDir` / 输入源 / Figma scopes |
+| [`references/flow-fetch.md`](references/flow-fetch.md)                   | CDP 拉取与归档                         |
+| [`references/flow-figma-interact.md`](references/flow-figma-interact.md) | Figma 只读识别（有链接才走）           |
+| [`references/flow-plan.md`](references/flow-plan.md)                     | 任务拆分与 plan                        |
+| [`references/flow-merge.md`](references/flow-merge.md)                   | PRD × Figma 合成规则                   |
 
 ## 模式
 
-| 模式 | 条件 |
-|------|------|
-| `prd-only` | 仅有需求输入（链接 / 粘贴文本 / 需求截图，三选一或组合） |
-| `prd+figma` | 需求输入 + 至少一个设计输入（Figma URL 或设计截图） |
+| 模式         | 条件                                                                                   |
+| ------------ | -------------------------------------------------------------------------------------- |
+| `prd-only`   | 仅有需求输入（链接 / 粘贴文本 / 需求截图，三选一或组合）                               |
+| `prd+figma`  | 需求输入 + 至少一个设计输入（Figma URL 或设计截图）                                    |
 | `figma-only` | 仅有设计输入（Figma URL 或设计截图，少见；`requirements.md` 以稿面推断并标「缺 PRD」） |
 
 需求/设计输入不局限于链接：用户直接贴截图同样有效，只是**截图直读的还原精度低于链接/节点直读**（没有可解析的 DOM 文本或 Figma bounds 数据，靠视觉识别），产出文档须如实标注来源与置信度，不能包装成跟链接直读同等精度。
 
 ## 交付物（均在确认后的 `outputDir` 下）
 
-| 文件 | 说明 |
-|------|------|
-| `source/` | 归档原文；**所有**截图/附件统一在 `source/assets/` |
-| `plan.md` | 任务清单（tdd / ui-verify / build-verify / docs） |
-| `requirements.md` | **定稿**：业务需求（做什么、校验、数据） |
-| `interaction.md` | **定稿**：交互/UI 规格（有 Figma 时必出；无 Figma 时可由 PRD  alone 生成精简版） |
-| `figma-excerpt.md` | 中间产物：设计识别摘录（有 Figma 时） |
-| `open-questions.md` | 未关闭问题；全部关闭前不得标 `status: confirmed` |
-| `meta.yaml` | 可选：来源 URL、`scopeNodeId`、模式、生成时间 |
+| 文件                | 说明                                                                            |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `source/`           | 归档原文；**所有**截图/附件统一在 `source/assets/`                              |
+| `plan.md`           | 任务清单（tdd / ui-verify / build-verify / docs）                               |
+| `requirements.md`   | **定稿**：业务需求（做什么、校验、数据）                                        |
+| `interaction.md`    | **定稿**：交互/UI 规格（有 Figma 时必出；无 Figma 时可由 PRD alone 生成精简版） |
+| `figma-excerpt.md`  | 中间产物：设计识别摘录（有 Figma 时）                                           |
+| `open-questions.md` | 未关闭问题；全部关闭前不得标 `status: confirmed`                                |
+| `meta.yaml`         | 可选：来源 URL、`scopeNodeId`、模式、生成时间                                   |
 
 骨架见 `references/skeletons/`。
 
@@ -88,17 +88,18 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 完整定义见 [`flow-gates.md`](references/flow-gates.md)。任一门未通过不得进入下一阶段；**禁止**隐性连跑。
 
-| 门 | 时机 |
-|----|------|
-| ① | 定范围 / `outputDir` / 输入 / Figma scopes 之后（调用方已指定路径时可轻量） |
-| ② | CDP 拉文（或确认粘贴文本）之后 |
-| ③ | Figma 摘录之后（无 Figma 则跳过） |
-| ④ | 合成定稿之前（冲突与缺口关闭） |
+| 门  | 时机                                                                        |
+| --- | --------------------------------------------------------------------------- |
+| ①   | 定范围 / `outputDir` / 输入 / Figma scopes 之后（调用方已指定路径时可轻量） |
+| ②   | CDP 拉文（或确认粘贴文本）之后                                              |
+| ③   | Figma 摘录之后（无 Figma 则跳过）                                           |
+| ④   | 合成定稿之前（冲突与缺口关闭）                                              |
 
-## MCP（xc-figma-mcp）
+## MCP（xc-figma-mcp · 公有 npm）
 
-- 插件根 [`.mcp.json`](../../.mcp.json) 声明了 `xc-figma-mcp`（`npx -y xc-figma-mcp`），供未配置过的环境安装后可用。
+- 本插件为**开源**分发：根目录 [`.mcp.json`](../../.mcp.json) 声明 `xc-figma-mcp`，默认 `npx -y xc-figma-mcp`（公有 npm，无需私有源）。
 - **若本机 `~/.cursor/mcp.json` 或项目已配置同名服务**：优先使用**已连接、可用**的那套；不要重复启动两套互相踩脚。命名空间可能是 `xc-figma-mcp` 或 `user-xc-figma-mcp`，以当前会话 `GetDynamicTools` / MCP 列表为准。
+
 - 使用前须：Figma **桌面端**打开目标文件，并 Run **Xc-Figma-Plugin**；`list_files` 为空则暂停并提示用户。
 - **只读工具**：`list_files` → `get_screenshot` / `get_node` / 可选 `get_design_context`。
 - **禁止**：`save_screenshots`、向业务 `images/` 切图、改页面/reducer/路由源码。

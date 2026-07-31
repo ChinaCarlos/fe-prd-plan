@@ -1,6 +1,6 @@
 # fe-prd-plan
 
-通用需求文档拉取 + 实现计划拆分 +（可选）Figma 交互合成——面向 Cursor 的**全局插件**。
+通用需求文档拉取 + 实现计划拆分 +（可选）Figma 交互合成——面向 Cursor 的**全局插件**（**开源项目**，MIT）。
 
 ## 它是什么
 
@@ -24,9 +24,9 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/instal
 
 再次运行同一命令 = 更新（保留 `config.env` 与 `site-patterns/`）。
 
-### MCP（xc-figma-mcp）
+### MCP（xc-figma-mcp · 公有 npm）
 
-插件根目录含 [`.mcp.json`](.mcp.json)，声明：
+本仓库为**开源**项目，插件根 [`.mcp.json`](.mcp.json) 默认从 **公有 npm**（`registry.npmjs.org`）拉取 `xc-figma-mcp`：
 
 ```json
 {
@@ -39,7 +39,11 @@ curl -fsSL https://raw.githubusercontent.com/ChinaCarlos/fe-prd-plan/main/instal
 }
 ```
 
+包页面：https://www.npmjs.com/package/xc-figma-mcp  
+
 若你**已经**在 `~/.cursor/mcp.json` 或项目里配置了同名服务，以已连接实例为准，无需刻意再开一套。使用 Figma 支路前请在桌面端打开文件并 Run [**Xc-Figma-Plugin**](https://www.figma.com/community/plugin/1663788039337307446/xc-figma-plugin) 配套使用。
+
+> 与私有版 `spark-prd-plan` 能力等价；本机**只装其中一个**即可，不要同时装两套。
 
 ## 卸载
 
