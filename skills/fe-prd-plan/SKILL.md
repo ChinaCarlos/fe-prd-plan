@@ -97,9 +97,8 @@ CDP 抓取内核改编自 **web-access**（一泽Eze，MIT，<https://github.com
 
 ## MCP（xc-figma-mcp · 公有 npm）
 
-- 本插件为**开源**分发：根目录 [`.mcp.json`](../../.mcp.json) 声明 `xc-figma-mcp`，默认 `npx -y xc-figma-mcp`（公有 npm，无需私有源）。
+- 本插件为**开源**分发：根目录 [`.mcp.json`](../../.mcp.json) 声明 `xc-figma-mcp`，默认 `npx -y xc-figma-mcp`（公有 npm）。
 - **若本机 `~/.cursor/mcp.json` 或项目已配置同名服务**：优先使用**已连接、可用**的那套；不要重复启动两套互相踩脚。命名空间可能是 `xc-figma-mcp` 或 `user-xc-figma-mcp`，以当前会话 `GetDynamicTools` / MCP 列表为准。
-
 - 使用前须：Figma **桌面端**打开目标文件，并 Run **Xc-Figma-Plugin**；`list_files` 为空则暂停并提示用户。
 - **只读工具**：`list_files` → `get_screenshot` / `get_node` / 可选 `get_design_context`。
 - **禁止**：`save_screenshots`、向业务 `images/` 切图、改页面/reducer/路由源码。

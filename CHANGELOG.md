@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- MCP / 插件配置：`xc-figma-mcp` → **`xc-figma-mcp`**；配套插件文案与 Community 链接同步为 **Xc-Figma-Plugin** / `xc-figma-plugin`
+- MCP / 插件配置：`spark-figma-mcp` → **`xc-figma-mcp`**；配套插件文案与 Community 链接同步为 **Xc-Figma-Plugin** / `xc-figma-plugin`（公有 npm）
 
 ## 0.4.0
 
